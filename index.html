@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Velocity Words - Speed Reader</title>
+    <meta name="description" content="Revolutionary speed reading app using RSVP technology">
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+            overscroll-behavior: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        #root { 
+            width: 100vw; 
+            min-height: 100vh; 
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+        }
+        @media (max-width: 640px) {
+            #root {
+                overflow-y: auto !important;
+            }
+        }
+    </style>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+const { useState, useEffect, useRef } = React;
+
+
+function VelocityWordsReader() {
+    const [text, setText] = useState('');
+    const [words, setWords] = useState([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [isPlaying, setIsPlaying] = useState(false);
+    const [wpm, setWpm] = useState(350);
+    const [inputText, setInputText] = useState('');
+    const [isDraggingProgress, setIsDraggingProgress] = useState(false);
+    
+    // Phase 3: Visual Customization
+    const [showSettings, setShowSettings] = useState(false);
+    const [fontSize, setFontSize] = useState('medium'); // small, medium, large
+    const [colorTheme, setColorTheme] = useState('velocity');
+    const [showGuideLines, setShowGuideLines] = useState(true);
+    const [guideLineOpacity, setGuideLineOpacity] = useState(30);
+    const [focusLineOpacity, setFocusLineOpacity] = useState(30);
+    
+    // Phase 4: Smart Reading Features
+    const [punctuationPausing, setPunctuationPausing] = useState(true);
+    const [longWordSlowdown, setLongWordSlowdown] = useState(true);
+    const [commaPause, setCommaPause] = useState(50); // ms
+    const [periodPause, setPeriodPause] = useState(150); // ms
+    
+    // Phase 5: Document Management
+    const [savedDocuments, setSavedDocuments] = useState([]);
+    const [currentDocumentId, setCurrentDocumentId] = useState(null);
+    const [showDocuments, setShowDocuments] = useState(false);
+    const [documentTitle, setDocumentTitle] = useState('');
+    
+    // Phase 6: Progress & Analytics
+    const [readingHistory, setReadingHistory] = useState([]);
+    const [showStats, setShowStats] = useState(false);
+    const [sessionStartTime, setSessionStartTime] = useState(null);
+    const [sessionWordsRead, setSessionWordsRead] = useState(0);
+    const [totalWordsRead, setTotalWordsRead] = useState(0);
+    const [averageWPM, setAverageWPM] = useState(0);
+    const [smoothProgress, setSmoothProgress] = useState(0);
+    
+    // Phase 7: Enhancement Tools
+    const [highlights, setHighlights] = useState([]);
+    const [notes, setNotes] = useState([]);
+    const [showNoteInput, setShowNoteInput] = useState(false);
+    const [currentNote, setCurrentNote] = useState('');
+    const [reReadStart, setReReadStart] = useState(null);
+    const [reReadEnd, setReReadEnd] = useState(null);
+    const [isReReading, setIsReReading] = useState(false);
+    
+    // Phase 8: Advanced Features
+    const [speedRamping, setSpeedRamping] = useState(false);
+    const [rampStartWPM, setRampStartWPM] = useState(200);
+    const [rampEndWPM, setRampEndWPM] = useState(400);
+    const [rampDuration, setRampDuration] = useState(20); // words
+    const [dailyGoal, setDailyGoal] = useState(1000); // words per day
+    const [todayWordsRead, setTodayWordsRead] = useState(0);
+    const [autoSave, setAutoSave] = useState(true);
+    const [showFocusExercise, setShowFocusExercise] = useState(false);
+    
+    // Phase 9: Polish & Mobile
+    const [showOnboarding, setShowOnboarding] = useState(false);
+    const [onboardingStep, setOnboardingStep] = useState(0);
+    const [touchStartX, setTouchStartX] = useState(0);
+    const [showExportImport, setShowExportImport] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    
+    // Phase 10: Quick Wins
+    const [readingStreak, setReadingStreak] = useState(0);
+    const [lastReadDate, setLastReadDate] = useState(null);
+    const [showCommandPalette, setShowCommandPalette] = useState(false);
+    const [commandSearch, setCommandSearch] = useState('');
+    const [customShortcuts, setCustomShortcuts] = useState({
+        playPause: 'Space',
+        skipBack: 'ArrowLeft',
+        skipForward: 'ArrowRight',
+        highlight: 'KeyH',
+        note: 'KeyN',
+        reset: 'Home'
+    });
+    const [editingShortcut, setEditingShortcut] = useState(null);
+    const [isLoading, setIsLoading] = useState(false);
+    const [loadingMessage, setLoadingMessage] = useState('');
+    
+    // Toast notifications
+    const [toast, setToast] = useState(null);
+    
+    const intervalRef = useRef(null);
+    const progressBarRef = useRef(null);
+    const fileInputRef = useRef(null);
+    const animationFrameRef = useRef(null);
+    const autoSaveIntervalRef = useRef(null);
+    const settingsFileInputRef = useRef(null);
+    const fullscreenContainerRef = useRef(null);
+
+    // Sample text for demo
+    const sampleText = "Speed reading is a technique that allows you to read faster while maintaining comprehension. By using RSVP technology, words flash sequentially at a fixed point, eliminating eye movement and significantly increasing reading speed. This method has been proven effective for many readers who want to consume more content in less time.";
+
+    // Font sizes
+    const fontSizes = {
+        small: 36,
+        medium: 48,
+        large: 64
+    };
+
+    // Theme configurations - Modern Tech Look
+    const themes = {
+        velocity: {
+            bg: 'linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%)',
+            text: '#e0e0e0',
+            panel: 'rgba(20, 10, 10, 0.7)',
+            border: 'rgba(255, 50, 50, 0.2)',
+            focusColor: '#ff0040',
+            shadow: '0 8px 32px 0 rgba(255, 0, 64, 0.3)'
+        },
+        dark: {
+            bg: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%)',
+            text: '#e0e0e0',
+            panel: 'rgba(30, 30, 46, 0.7)',
+            border: 'rgba(255, 255, 255, 0.1)',
+            focusColor: '#00d9ff',
+            shadow: '0 8px 32px 0 rgba(0, 217, 255, 0.15)'
+        },
+        light: {
+            bg: 'linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%)',
+            text: '#1a1a1a',
+            panel: 'rgba(255, 255, 255, 0.7)',
+            border: 'rgba(0, 0, 0, 0.1)',
+            focusColor: '#0066ff',
+            shadow: '0 8px 32px 0 rgba(0, 102, 255, 0.15)'
+        },
+        sepia: {
+            bg: 'linear-gradient(135deg, #f4ecd8 0%, #e8d4a8 100%)',
+            text: '#5c4a3a',
+            panel: 'rgba(232, 220, 196, 0.7)',
+            border: 'rgba(92, 74, 58, 0.2)',
+            focusColor: '#d84315',
+            shadow: '0 8px 32px 0 rgba(216, 67, 21, 0.15)'
+        },
+        night: {
+            bg: 'linear-gradient(135deg, #000000 0%, #0a192f 100%)',
+            text: '#64ffda',
+            panel: 'rgba(10, 25, 47, 0.7)',
+            border: 'rgba(100, 255, 218, 0.2)',
+            focusColor: '#64ffda',
+            shadow: '0 8px 32px 0 rgba(100, 255, 218, 0.2)'
+        },
+        highContrast: {
+            bg: 'linear-gradient(135deg, #000000 0%, #1a1a1a 100%)',
+            text: '#ffffff',
+            panel: 'rgba(26, 26, 26, 0.9)',
+            border: 'rgba(255, 255, 255, 0.3)',
+            focusColor: '#00ff00',
+            shadow: '0 8px 32px 0 rgba(0, 255, 0, 0.2)'
+        }
+    };
+
+    const currentTheme = themes[colorTheme];
+    const currentFontSize = fontSizes[fontSize];
+    
+    // Calculate responsive font size based on word length
+    const getResponsiveFontSize = (word) => {
+        const baseSize = currentFontSize;
+        const wordLength = word.length;
+        
+        // Scale down font for very long words to prevent overflow
+        if (wordLength <= 10) return baseSize;
+        if (wordLength <= 15) return baseSize * 0.85;
+        if (wordLength <= 20) return baseSize * 0.7;
+        return baseSize * 0.6;
+    };
+
+    useEffect(() => {
+        // Load sample text on mount
+        setInputText(sampleText);
+        
+        // Load saved documents from localStorage
+        const saved = localStorage.getItem('rsvp-documents');
+        if (saved) {
+            try {
+                setSavedDocuments(JSON.parse(saved));
+            } catch (e) {
+                console.error('Error loading documents:', e);
+            }
+        }
+
+        // Load reading history and stats from localStorage
+        const history = localStorage.getItem('rsvp-history');
+        if (history) {
+            try {
+                setReadingHistory(JSON.parse(history));
+            } catch (e) {
+                console.error('Error loading history:', e);
+            }
+        }
+
+        const stats = localStorage.getItem('rsvp-stats');
+        if (stats) {
+            try {
+                const parsedStats = JSON.parse(stats);
+                setTotalWordsRead(parsedStats.totalWordsRead || 0);
+                setAverageWPM(parsedStats.averageWPM || 0);
+            } catch (e) {
+                console.error('Error loading stats:', e);
+            }
+        }
+
+        // Load today's progress
+        const today = new Date().toDateString();
+        const dailyProgress = localStorage.getItem('rsvp-daily-progress');
+        if (dailyProgress) {
+            try {
+                const parsed = JSON.parse(dailyProgress);
+                if (parsed.date === today) {
+                    setTodayWordsRead(parsed.wordsRead || 0);
+                } else {
+                    // New day, reset
+                    setTodayWordsRead(0);
+                    localStorage.setItem('rsvp-daily-progress', JSON.stringify({ date: today, wordsRead: 0 }));
+                }
+            } catch (e) {
+                console.error('Error loading daily progress:', e);
+            }
+        } else {
+            localStorage.setItem('rsvp-daily-progress', JSON.stringify({ date: today, wordsRead: 0 }));
+        }
+
+        // Load daily goal
+        const savedGoal = localStorage.getItem('rsvp-daily-goal');
+        if (savedGoal) {
+            setDailyGoal(parseInt(savedGoal));
+        }
+
+        // Check if first time user
+        const hasVisited = localStorage.getItem('rsvp-has-visited');
+        if (!hasVisited) {
+            setShowOnboarding(true);
+            localStorage.setItem('rsvp-has-visited', 'true');
+        }
+
+        // Load reading streak
+        const streakData = localStorage.getItem('rsvp-reading-streak');
+        if (streakData) {
+            try {
+                const { streak, lastDate } = JSON.parse(streakData);
+                setReadingStreak(streak || 0);
+                setLastReadDate(lastDate);
+            } catch (e) {
+                console.error('Error loading streak:', e);
+            }
+        }
+
+        // Load custom shortcuts
+        const shortcuts = localStorage.getItem('rsvp-custom-shortcuts');
+        if (shortcuts) {
+            try {
+                setCustomShortcuts(JSON.parse(shortcuts));
+            } catch (e) {
+                console.error('Error loading shortcuts:', e);
+            }
+        }
+
+        // Clipboard auto-detect
+        const handlePaste = (e) => {
+            if (e.target.tagName !== 'TEXTAREA' && e.target.tagName !== 'INPUT') {
+                const pastedText = e.clipboardData.getData('text');
+                if (pastedText && pastedText.length > 50) {
+                    setInputText(pastedText);
+                    showToast('✓ Text pasted from clipboard!', 'success');
+                }
+            }
+        };
+
+        window.addEventListener('paste', handlePaste);
+        
+        // Fullscreen change listeners
+        const handleFullscreenChange = () => {
+            const isCurrentlyFullscreen = !!(
+                document.fullscreenElement ||
+                document.webkitFullscreenElement ||
+                document.mozFullScreenElement ||
+                document.msFullscreenElement
+            );
+            setIsFullscreen(isCurrentlyFullscreen);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        document.addEventListener('webkitfullscreenchange', handleFullscreenChange);
+        document.addEventListener('mozfullscreenchange', handleFullscreenChange);
+        document.addEventListener('MSFullscreenChange', handleFullscreenChange);
+
+        return () => {
+            window.removeEventListener('paste', handlePaste);
+            document.removeEventListener('fullscreenchange', handleFullscreenChange);
+            document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+            document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+        };
+    }, []);
+
+    // Save documents to localStorage whenever they change
+    useEffect(() => {
+        if (savedDocuments.length > 0) {
+            localStorage.setItem('rsvp-documents', JSON.stringify(savedDocuments));
+        }
+    }, [savedDocuments]);
+
+    // Auto-save current document position
+    useEffect(() => {
+        if (autoSave && currentDocumentId && !isPlaying) {
+            const timer = setTimeout(() => {
+                updateDocumentPosition();
+            }, 2000); // Auto-save 2 seconds after pausing
+            
+            return () => clearTimeout(timer);
+        }
+    }, [autoSave, currentDocumentId, currentIndex, isPlaying]);
+
+    // Update daily progress
+    useEffect(() => {
+        if (sessionWordsRead > 0) {
+            const today = new Date().toDateString();
+            const newTotal = todayWordsRead + 1;
+            setTodayWordsRead(newTotal);
+            localStorage.setItem('rsvp-daily-progress', JSON.stringify({ date: today, wordsRead: newTotal }));
+        }
+    }, [sessionWordsRead]);
+
+    // Mobile swipe gestures
+    useEffect(() => {
+        const handleTouchStart = (e) => {
+            setTouchStartX(e.touches[0].clientX);
+        };
+
+        const handleTouchEnd = (e) => {
+            const touchEndX = e.changedTouches[0].clientX;
+            const diff = touchStartX - touchEndX;
+
+            // Swipe threshold
+            if (Math.abs(diff) > 50 && words.length > 0) {
+                if (diff > 0) {
+                    // Swipe left - skip forward
+                    skipForward();
+                } else {
+                    // Swipe right - skip backward
+                    skipBackward();
+                }
+            }
+        };
+
+        // Only add to reading area
+        const readingArea = document.querySelector('.reading-area-swipe');
+        if (readingArea) {
+            readingArea.addEventListener('touchstart', handleTouchStart);
+            readingArea.addEventListener('touchend', handleTouchEnd);
+
+            return () => {
+                readingArea.removeEventListener('touchstart', handleTouchStart);
+                readingArea.removeEventListener('touchend', handleTouchEnd);
+            };
+        }
+    }, [touchStartX, words.length, currentIndex]);
+
+    // Keyboard shortcuts
+    useEffect(() => {
+        const handleKeyDown = (e) => {
+            // Command Palette (Cmd/Ctrl + K)
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+                e.preventDefault();
+                setShowCommandPalette(true);
+                return;
+            }
+
+            // Prevent if typing in textarea or input or command palette is open
+            if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT' || showCommandPalette) return;
+
+            // Use custom shortcuts
+            if (e.code === customShortcuts.playPause) {
+                e.preventDefault();
+                if (words.length > 0) {
+                    setIsPlaying(prev => !prev);
+                }
+            } else if (e.code === customShortcuts.skipBack) {
+                e.preventDefault();
+                skipBackward();
+            } else if (e.code === customShortcuts.skipForward) {
+                e.preventDefault();
+                skipForward();
+            } else if (e.code === customShortcuts.reset) {
+                e.preventDefault();
+                handleReset();
+            } else if (e.code === 'End') {
+                e.preventDefault();
+                if (words.length > 0) {
+                    setCurrentIndex(words.length - 1);
+                    setSmoothProgress(words.length - 1);
+                    setIsPlaying(false);
+                }
+            } else if (e.code === customShortcuts.highlight) {
+                e.preventDefault();
+                if (words.length > 0 && words[currentIndex]) {
+                    const newHighlight = {
+                        id: Date.now(),
+                        wordIndex: currentIndex,
+                        word: words[currentIndex],
+                        timestamp: new Date().toISOString()
+                    };
+                    setHighlights(prev => [...prev, newHighlight]);
+                    setToast({ message: '✓ Highlighted', type: 'info' });
+                    setTimeout(() => setToast(null), 3000);
+                }
+            } else if (e.code === customShortcuts.note) {
+                e.preventDefault();
+                if (words.length > 0) {
+                    setShowNoteInput(true);
+                    setIsPlaying(false);
+                }
+            }
+        };
+
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [words, currentIndex, customShortcuts, showCommandPalette]); // Added currentIndex dependency
+
+    useEffect(() => {
+        if (isPlaying && words.length > 0) {
+            // Start session tracking
+            if (!sessionStartTime) {
+                setSessionStartTime(Date.now());
+            }
+
+            const currentWord = words[currentIndex];
+            let interval = 60000 / wpm; // base milliseconds per word
+            
+            // Phase 8: Speed ramping
+            if (speedRamping && sessionWordsRead < rampDuration) {
+                const progress = sessionWordsRead / rampDuration;
+                const currentWPM = rampStartWPM + (rampEndWPM - rampStartWPM) * progress;
+                interval = 60000 / currentWPM;
+            }
+            
+            // Smart Feature: Long word slowdown
+            if (longWordSlowdown && currentWord && currentWord.length > 8) {
+                interval *= 1.3; // 30% slower for long words
+            }
+            
+            // Smart Feature: Punctuation pausing
+            let punctuationDelay = 0;
+            if (punctuationPausing && currentWord) {
+                const lastChar = currentWord.slice(-1);
+                if (lastChar === ',') {
+                    punctuationDelay = commaPause;
+                } else if (lastChar === '.' || lastChar === '!' || lastChar === '?') {
+                    punctuationDelay = periodPause;
+                }
+            }
+
+            // Smooth progress animation
+            const totalDuration = interval + punctuationDelay;
+            const startTime = Date.now();
+            const startProgress = currentIndex;
+            
+            const animate = () => {
+                const elapsed = Date.now() - startTime;
+                const progressFraction = Math.min(elapsed / totalDuration, 1);
+                const currentProgress = startProgress + progressFraction;
+                setSmoothProgress(currentProgress);
+                
+                if (progressFraction < 1 && isPlaying) {
+                    animationFrameRef.current = requestAnimationFrame(animate);
+                }
+            };
+            
+            animationFrameRef.current = requestAnimationFrame(animate);
+            
+            intervalRef.current = setTimeout(() => {
+                setCurrentIndex(prev => {
+                    const nextIndex = prev + 1;
+                    
+                    // Track words read
+                    setSessionWordsRead(s => s + 1);
+                    
+                    // Check if re-reading and reached end of section
+                    if (isReReading && reReadEnd !== null && nextIndex > reReadEnd) {
+                        setIsPlaying(false);
+                        setIsReReading(false);
+                        setSmoothProgress(reReadEnd);
+                        showToast('Re-read complete!', 'success');
+                        return reReadStart;
+                    }
+                    
+                    if (nextIndex >= words.length) {
+                        setIsPlaying(false);
+                        setSmoothProgress(words.length);
+                        endSession(nextIndex, true); // completed = true
+                        return 0;
+                    }
+                    return nextIndex;
+                });
+            }, totalDuration);
+        } else {
+            if (intervalRef.current) {
+                clearTimeout(intervalRef.current);
+            }
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+            
+            // Snap progress to current index when paused
+            setSmoothProgress(currentIndex);
+            
+            // End session when paused (not completed)
+            if (sessionStartTime && sessionWordsRead > 0) {
+                endSession(currentIndex, false); // completed = false
+            }
+        }
+
+        return () => {
+            if (intervalRef.current) {
+                clearTimeout(intervalRef.current);
+            }
+            if (animationFrameRef.current) {
+                cancelAnimationFrame(animationFrameRef.current);
+            }
+        };
+    }, [isPlaying, wpm, words.length, currentIndex, punctuationPausing, longWordSlowdown, commaPause, periodPause]);
+
+    const loadText = () => {
+        if (inputText.trim()) {
+            const wordArray = inputText.trim().split(/\s+/);
+            setWords(wordArray);
+            setCurrentIndex(0);
+            setIsPlaying(false);
+        }
+    };
+
+    const handlePlayPause = () => {
+        if (words.length === 0) {
+            loadText();
+        }
+        setIsPlaying(!isPlaying);
+    };
+
+    const handleReset = () => {
+        setIsPlaying(false);
+        setCurrentIndex(0);
+        setSmoothProgress(0);
+    };
+
+    const skipBackward = () => {
+        const newIndex = Math.max(0, currentIndex - 10);
+        setCurrentIndex(newIndex);
+        setSmoothProgress(newIndex);
+        setIsPlaying(false);
+    };
+
+    const skipForward = () => {
+        const newIndex = Math.min(words.length - 1, currentIndex + 10);
+        setCurrentIndex(newIndex);
+        setSmoothProgress(newIndex);
+        setIsPlaying(false);
+    };
+
+    // Document Management Functions
+    const saveDocument = () => {
+        if (!inputText.trim()) {
+            showToast('Please enter some text first', 'error');
+            return;
+        }
+        
+        const title = documentTitle.trim() || `Document ${savedDocuments.length + 1}`;
+        const newDoc = {
+            id: Date.now(),
+            title,
+            content: inputText,
+            wordCount: inputText.trim().split(/\s+/).length,
+            createdAt: new Date().toISOString(),
+            lastPosition: 0
+        };
+        
+        setSavedDocuments(prev => [newDoc, ...prev]);
+        setDocumentTitle('');
+        setCurrentDocumentId(newDoc.id);
+        showToast(`✓ Saved: ${title}`);
+    };
+
+    const loadDocument = (doc) => {
+        setInputText(doc.content);
+        setCurrentDocumentId(doc.id);
+        setCurrentIndex(doc.lastPosition || 0);
+        
+        // Auto-load the text
+        const wordArray = doc.content.trim().split(/\s+/);
+        setWords(wordArray);
+        setIsPlaying(false);
+        
+        setShowDocuments(false);
+        showToast(`✓ Loaded: ${doc.title}`);
+    };
+
+    const deleteDocument = (id) => {
+        const doc = savedDocuments.find(d => d.id === id);
+        if (!doc) return;
+        
+        if (confirm(`Delete "${doc.title}"? This cannot be undone.`)) {
+            setSavedDocuments(prev => prev.filter(doc => doc.id !== id));
+            if (currentDocumentId === id) {
+                setCurrentDocumentId(null);
+            }
+            showToast(`✓ Deleted: ${doc.title}`, 'info');
+        }
+    };
+
+    const updateDocumentPosition = () => {
+        if (currentDocumentId && currentIndex > 0) {
+            setSavedDocuments(prev => 
+                prev.map(doc => 
+                    doc.id === currentDocumentId 
+                        ? { ...doc, lastPosition: currentIndex }
+                        : doc
+                )
+            );
+        }
+    };
+
+    // Update document position when pausing or finishing
+    useEffect(() => {
+        if (!isPlaying && currentDocumentId) {
+            updateDocumentPosition();
+        }
+    }, [isPlaying, currentIndex, currentDocumentId]);
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // Check file size (mobile browsers have memory limits)
+        const maxSize = 50 * 1024 * 1024; // 50MB
+        if (file.size > maxSize) {
+            showToast('File too large. Please use files under 50MB for best performance.', 'error');
+            e.target.value = '';
+            return;
+        }
+
+        const fileType = file.name.split('.').pop().toLowerCase();
+        
+        // Show loading for larger files
+        if (file.size > 5 * 1024 * 1024) {
+            showToast('Processing large file, please wait...', 'info');
+        }
+        
+        // Handle different file types
+        if (fileType === 'pdf') {
+            handlePDFUpload(file);
+        } else if (fileType === 'docx') {
+            handleDOCXUpload(file);
+        } else if (fileType === 'epub') {
+            handleEPUBUpload(file);
+        } else if (['txt', 'md', 'rtf'].includes(fileType)) {
+            handleTextUpload(file);
+        } else {
+            showToast('Unsupported file type. Use PDF, DOCX, EPUB, TXT, MD, or RTF', 'error');
+        }
+        
+        // Reset input
+        e.target.value = '';
+    };
+
+    const handleTextUpload = (file) => {
+        setIsLoading(true);
+        setLoadingMessage('Reading file...');
+        
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            let content = event.target.result;
+            
+            // Clean RTF if needed
+            if (file.name.endsWith('.rtf')) {
+                setLoadingMessage('Cleaning RTF formatting...');
+                content = content.replace(/\\[a-z]+\d*\s?/gi, '').replace(/[{}]/g, '');
+            }
+            
+            setInputText(content);
+            setDocumentTitle(file.name.replace(/\.[^/.]+$/, ''));
+            setIsLoading(false);
+            showToast(`✓ Uploaded: ${file.name}`);
+        };
+        reader.onerror = () => {
+            setIsLoading(false);
+            showToast('Failed to read file', 'error');
+        };
+        reader.readAsText(file);
+    };
+
+    const handlePDFUpload = async (file) => {
+        setIsLoading(true);
+        try {
+            setLoadingMessage('Loading PDF library...');
+            const arrayBuffer = await file.arrayBuffer();
+            const uint8Array = new Uint8Array(arrayBuffer);
+            
+            // Load PDF.js library dynamically
+            if (!window.pdfjsLib) {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+                document.head.appendChild(script);
+                
+                await new Promise((resolve, reject) => {
+                    script.onload = resolve;
+                    script.onerror = () => reject(new Error('Failed to load PDF library'));
+                });
+                
+                window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            }
+            
+            setLoadingMessage('Opening PDF...');
+            const pdf = await window.pdfjsLib.getDocument({ data: uint8Array }).promise;
+            
+            // Limit pages on mobile for performance
+            const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+            const maxPages = isMobile ? 100 : pdf.numPages;
+            
+            if (pdf.numPages > maxPages) {
+                showToast(`Reading first ${maxPages} pages for mobile performance...`, 'info');
+            }
+            
+            let fullText = '';
+            
+            for (let i = 1; i <= Math.min(pdf.numPages, maxPages); i++) {
+                setLoadingMessage(`Extracting page ${i} of ${Math.min(pdf.numPages, maxPages)}...`);
+                const page = await pdf.getPage(i);
+                const textContent = await page.getTextContent();
+                const pageText = textContent.items.map(item => item.str).join(' ');
+                fullText += pageText + '\n\n';
+            }
+            
+            setInputText(fullText.trim());
+            setDocumentTitle(file.name.replace('.pdf', ''));
+            setIsLoading(false);
+            showToast(`✓ Uploaded PDF: ${file.name} (${Math.min(pdf.numPages, maxPages)} pages)`);
+        } catch (error) {
+            console.error('PDF error:', error);
+            setIsLoading(false);
+            showToast('Failed to read PDF. Try a smaller file or convert to TXT.', 'error');
+        }
+    };
+
+    const handleDOCXUpload = async (file) => {
+        setIsLoading(true);
+        try {
+            setLoadingMessage('Loading Word reader...');
+            const arrayBuffer = await file.arrayBuffer();
+            
+            // Load mammoth library dynamically
+            if (!window.mammoth) {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js';
+                document.head.appendChild(script);
+                
+                await new Promise((resolve) => {
+                    script.onload = resolve;
+                });
+            }
+            
+            setLoadingMessage('Extracting text from Word document...');
+            const result = await window.mammoth.extractRawText({ arrayBuffer });
+            setInputText(result.value);
+            setDocumentTitle(file.name.replace('.docx', ''));
+            setIsLoading(false);
+            showToast(`✓ Uploaded: ${file.name}`);
+        } catch (error) {
+            console.error('DOCX error:', error);
+            setIsLoading(false);
+            showToast('Failed to read DOCX. Try converting to TXT first.', 'error');
+        }
+    };
+
+    const handleEPUBUpload = async (file) => {
+        setIsLoading(true);
+        try {
+            setLoadingMessage('Loading eBook reader...');
+            const arrayBuffer = await file.arrayBuffer();
+            
+            // Load JSZip library dynamically
+            if (!window.JSZip) {
+                const script = document.createElement('script');
+                script.src = 'https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js';
+                document.head.appendChild(script);
+                
+                await new Promise((resolve) => {
+                    script.onload = resolve;
+                });
+            }
+            
+            setLoadingMessage('Unzipping EPUB file...');
+            const zip = await window.JSZip.loadAsync(arrayBuffer);
+            let fullText = '';
+            
+            // Find and extract text from HTML/XHTML files
+            const htmlFiles = Object.keys(zip.files).filter(name => 
+                name.endsWith('.html') || name.endsWith('.xhtml')
+            );
+            
+            setLoadingMessage(`Extracting text from ${htmlFiles.length} chapters...`);
+            
+            for (const filename of htmlFiles) {
+                const content = await zip.files[filename].async('string');
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(content, 'text/html');
+                fullText += doc.body.textContent + '\n\n';
+            }
+            
+            setInputText(fullText.trim());
+            setDocumentTitle(file.name.replace('.epub', ''));
+            setIsLoading(false);
+            showToast(`✓ Uploaded EPUB: ${file.name}`);
+        } catch (error) {
+            console.error('EPUB error:', error);
+            setIsLoading(false);
+            showToast('Failed to read EPUB. Try converting to TXT first.', 'error');
+        }
+    };
+
+    // Analytics Functions
+    const endSession = (finalIndex, completed = false) => {
+        if (!sessionStartTime || sessionWordsRead === 0) return;
+
+        const duration = (Date.now() - sessionStartTime) / 1000; // seconds
+        const actualWPM = Math.round((sessionWordsRead / duration) * 60);
+
+        const session = {
+            id: Date.now(),
+            date: new Date().toISOString(),
+            wordsRead: sessionWordsRead,
+            duration: Math.round(duration),
+            wpm: actualWPM,
+            targetWPM: wpm,
+            documentTitle: documentTitle || 'Untitled'
+        };
+
+        // Update reading history
+        const newHistory = [session, ...readingHistory].slice(0, 50); // Keep last 50 sessions
+        setReadingHistory(newHistory);
+        localStorage.setItem('rsvp-history', JSON.stringify(newHistory));
+
+        // Update total stats
+        const newTotalWords = totalWordsRead + sessionWordsRead;
+        const newAverageWPM = Math.round(
+            (averageWPM * readingHistory.length + actualWPM) / (readingHistory.length + 1)
+        );
+
+        setTotalWordsRead(newTotalWords);
+        setAverageWPM(newAverageWPM);
+
+        localStorage.setItem('rsvp-stats', JSON.stringify({
+            totalWordsRead: newTotalWords,
+            averageWPM: newAverageWPM
+        }));
+
+        // Update reading streak
+        const today = new Date().toDateString();
+        if (lastReadDate !== today) {
+            const yesterday = new Date(Date.now() - 86400000).toDateString();
+            let newStreak = 1;
+            
+            if (lastReadDate === yesterday) {
+                newStreak = readingStreak + 1;
+            }
+            
+            setReadingStreak(newStreak);
+            setLastReadDate(today);
+            localStorage.setItem('rsvp-reading-streak', JSON.stringify({ streak: newStreak, lastDate: today }));
+            
+            if (newStreak > 1) {
+                setTimeout(() => showToast(`🔥 ${newStreak} day streak!`, 'success'), 1000);
+            }
+        }
+
+        // Show completion notification ONLY if document was completed
+        if (completed && sessionWordsRead >= 10) {
+            showToast(`🎉 Completed! ${sessionWordsRead} words at ${actualWPM} WPM`, 'success');
+        }
+
+        // Reset session tracking
+        setSessionStartTime(null);
+        setSessionWordsRead(0);
+    };
+
+    const clearHistory = () => {
+        if (confirm('Clear all reading history and stats? This cannot be undone.')) {
+            setReadingHistory([]);
+            setTotalWordsRead(0);
+            setAverageWPM(0);
+            localStorage.removeItem('rsvp-history');
+            localStorage.removeItem('rsvp-stats');
+            showToast('✓ History cleared', 'info');
+        }
+    };
+
+    const formatDuration = (seconds) => {
+        const mins = Math.floor(seconds / 60);
+        const secs = seconds % 60;
+        return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+    };
+
+    const showToast = (message, type = 'success') => {
+        setToast({ message, type });
+        setTimeout(() => setToast(null), 3000);
+    };
+
+    // Enhancement Tool Functions
+    const addHighlight = () => {
+        const newHighlight = {
+            id: Date.now(),
+            wordIndex: currentIndex,
+            word: words[currentIndex],
+            timestamp: new Date().toISOString()
+        };
+        setHighlights(prev => [...prev, newHighlight]);
+        showToast('✓ Highlighted', 'info');
+    };
+
+    const removeHighlight = (id) => {
+        setHighlights(prev => prev.filter(h => h.id !== id));
+        showToast('✓ Highlight removed', 'info');
+    };
+
+    const addNote = () => {
+        if (!currentNote.trim()) {
+            showToast('Please enter a note', 'error');
+            return;
+        }
+
+        const newNote = {
+            id: Date.now(),
+            wordIndex: currentIndex,
+            word: words[currentIndex],
+            note: currentNote,
+            timestamp: new Date().toISOString()
+        };
+        setNotes(prev => [...prev, newNote]);
+        setCurrentNote('');
+        setShowNoteInput(false);
+        showToast('✓ Note added', 'success');
+    };
+
+    const removeNote = (id) => {
+        setNotes(prev => prev.filter(n => n.id !== id));
+        showToast('✓ Note removed', 'info');
+    };
+
+    const startReReadSelection = () => {
+        if (reReadStart === null) {
+            setReReadStart(currentIndex);
+            showToast('Re-read start marked. Mark end position.', 'info');
+        } else {
+            setReReadEnd(currentIndex);
+            showToast('Re-read section ready!', 'success');
+        }
+    };
+
+    const reReadSection = () => {
+        if (reReadStart !== null && reReadEnd !== null) {
+            const start = Math.min(reReadStart, reReadEnd);
+            const end = Math.max(reReadStart, reReadEnd);
+            setCurrentIndex(start);
+            setSmoothProgress(start);
+            setIsReReading(true);
+            setIsPlaying(true);
+            showToast(`Re-reading ${end - start + 1} words`, 'info');
+        }
+    };
+
+    const cancelReRead = () => {
+        setReReadStart(null);
+        setReReadEnd(null);
+        setIsReReading(false);
+        showToast('Re-read cancelled', 'info');
+    };
+
+    const jumpToHighlight = (wordIndex) => {
+        setCurrentIndex(wordIndex);
+        setSmoothProgress(wordIndex);
+        setIsPlaying(false);
+    };
+
+    const jumpToNote = (wordIndex) => {
+        setCurrentIndex(wordIndex);
+        setSmoothProgress(wordIndex);
+        setIsPlaying(false);
+    };
+
+    // Phase 8: Advanced Features Functions
+    const updateDailyGoal = (newGoal) => {
+        setDailyGoal(newGoal);
+        localStorage.setItem('rsvp-daily-goal', newGoal.toString());
+    };
+
+    const startFocusExercise = () => {
+        setShowFocusExercise(true);
+        setIsPlaying(false);
+        showToast('Focus on the red line. Press any key when ready.', 'info');
+    };
+
+    const completeFocusExercise = () => {
+        setShowFocusExercise(false);
+        showToast('✓ Focus exercise complete!', 'success');
+    };
+
+    // Phase 9: Export/Import Settings
+    const exportSettings = () => {
+        const settings = {
+            fontSize,
+            colorTheme,
+            showGuideLines,
+            guideLineOpacity,
+            focusLineOpacity,
+            wpm,
+            punctuationPausing,
+            longWordSlowdown,
+            commaPause,
+            periodPause,
+            speedRamping,
+            rampStartWPM,
+            rampEndWPM,
+            rampDuration,
+            dailyGoal,
+            autoSave,
+            savedDocuments,
+            readingHistory: readingHistory.slice(0, 10) // Only last 10 sessions
+        };
+
+        const dataStr = JSON.stringify(settings, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `velocity-words-settings-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+        showToast('✓ Settings exported!', 'success');
+    };
+
+    const importSettings = (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            try {
+                const settings = JSON.parse(event.target.result);
+                
+                // Apply settings
+                if (settings.fontSize) setFontSize(settings.fontSize);
+                if (settings.colorTheme) setColorTheme(settings.colorTheme);
+                if (settings.showGuideLines !== undefined) setShowGuideLines(settings.showGuideLines);
+                if (settings.guideLineOpacity) setGuideLineOpacity(settings.guideLineOpacity);
+                if (settings.focusLineOpacity) setFocusLineOpacity(settings.focusLineOpacity);
+                if (settings.wpm) setWpm(settings.wpm);
+                if (settings.punctuationPausing !== undefined) setPunctuationPausing(settings.punctuationPausing);
+                if (settings.longWordSlowdown !== undefined) setLongWordSlowdown(settings.longWordSlowdown);
+                if (settings.commaPause) setCommaPause(settings.commaPause);
+                if (settings.periodPause) setPeriodPause(settings.periodPause);
+                if (settings.speedRamping !== undefined) setSpeedRamping(settings.speedRamping);
+                if (settings.rampStartWPM) setRampStartWPM(settings.rampStartWPM);
+                if (settings.rampEndWPM) setRampEndWPM(settings.rampEndWPM);
+                if (settings.rampDuration) setRampDuration(settings.rampDuration);
+                if (settings.dailyGoal) setDailyGoal(settings.dailyGoal);
+                if (settings.autoSave !== undefined) setAutoSave(settings.autoSave);
+                if (settings.savedDocuments) setSavedDocuments(settings.savedDocuments);
+                if (settings.readingHistory) setReadingHistory(settings.readingHistory);
+
+                showToast('✓ Settings imported!', 'success');
+                setShowExportImport(false);
+            } catch (error) {
+                showToast('Failed to import settings', 'error');
+            }
+        };
+        reader.readAsText(file);
+        e.target.value = '';
+    };
+
+    // Phase 10: Command Palette & Custom Shortcuts
+    const commands = [
+        { id: 'play', name: 'Play/Pause', action: () => words.length > 0 && setIsPlaying(p => !p), icon: '▶️' },
+        { id: 'reset', name: 'Reset to Start', action: handleReset, icon: '↺' },
+        { id: 'skipback', name: 'Skip Backward', action: skipBackward, icon: '⏪' },
+        { id: 'skipforward', name: 'Skip Forward', action: skipForward, icon: '⏩' },
+        { id: 'highlight', name: 'Highlight Word', action: addHighlight, icon: '⭐' },
+        { id: 'note', name: 'Add Note', action: () => { setShowNoteInput(true); setIsPlaying(false); }, icon: '📝' },
+        { id: 'settings', name: 'Open Settings', action: () => setShowSettings(true), icon: '⚙️' },
+        { id: 'stats', name: 'View Statistics', action: () => setShowStats(true), icon: '📊' },
+        { id: 'docs', name: 'My Documents', action: () => setShowDocuments(p => !p), icon: '📚' },
+        { id: 'export', name: 'Export Settings', action: exportSettings, icon: '📥' },
+        { id: 'focus', name: 'Focus Exercise', action: startFocusExercise, icon: '🎯' }
+    ];
+
+    const filteredCommands = commands.filter(cmd => 
+        cmd.name.toLowerCase().includes(commandSearch.toLowerCase())
+    );
+
+    const executeCommand = (command) => {
+        command.action();
+        setShowCommandPalette(false);
+        setCommandSearch('');
+    };
+
+    const updateShortcut = (key, newCode) => {
+        const updated = { ...customShortcuts, [key]: newCode };
+        setCustomShortcuts(updated);
+        localStorage.setItem('rsvp-custom-shortcuts', JSON.stringify(updated));
+        setEditingShortcut(null);
+        showToast(`✓ Shortcut updated`, 'success');
+    };
+
+    const getKeyName = (code) => {
+        const keyNames = {
+            'Space': 'Space',
+            'ArrowLeft': '← Left',
+            'ArrowRight': '→ Right',
+            'ArrowUp': '↑ Up',
+            'ArrowDown': '↓ Down',
+            'KeyH': 'H',
+            'KeyN': 'N',
+            'KeyR': 'R',
+            'KeyS': 'S',
+            'Home': 'Home',
+            'End': 'End'
+        };
+        return keyNames[code] || code;
+    };
+
+    const handleProgressClick = (e) => {
+        if (words.length === 0) return;
+        
+        const rect = e.currentTarget.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percentage = x / rect.width;
+        const newIndex = Math.floor(percentage * words.length);
+        
+        setCurrentIndex(Math.max(0, Math.min(words.length - 1, newIndex)));
+        setSmoothProgress(Math.max(0, Math.min(words.length - 1, newIndex)));
+        setIsPlaying(false);
+    };
+
+    const handleProgressDragStart = (e) => {
+        if (words.length === 0) return;
+        setIsDraggingProgress(true);
+        setIsPlaying(false);
+    };
+
+    const handleProgressDrag = (e) => {
+        if (!isDraggingProgress || words.length === 0) return;
+        
+        const rect = progressBarRef.current.getBoundingClientRect();
+        const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+        const percentage = x / rect.width;
+        const newIndex = Math.floor(percentage * words.length);
+        
+        setCurrentIndex(Math.max(0, Math.min(words.length - 1, newIndex)));
+        setSmoothProgress(Math.max(0, Math.min(words.length - 1, newIndex)));
+    };
+
+    const handleProgressDragEnd = () => {
+        setIsDraggingProgress(false);
+    };
+
+    // Handle dragging on mobile and desktop
+    useEffect(() => {
+        if (isDraggingProgress) {
+            window.addEventListener('mousemove', handleProgressDrag);
+            window.addEventListener('mouseup', handleProgressDragEnd);
+            window.addEventListener('touchmove', handleProgressDrag);
+            window.addEventListener('touchend', handleProgressDragEnd);
+            
+            return () => {
+                window.removeEventListener('mousemove', handleProgressDrag);
+                window.removeEventListener('mouseup', handleProgressDragEnd);
+                window.removeEventListener('touchmove', handleProgressDrag);
+                window.removeEventListener('touchend', handleProgressDragEnd);
+            };
+        }
+    }, [isDraggingProgress, words.length]);
+
+    const handleSpeedChange = (e) => {
+        setWpm(parseInt(e.target.value));
+    };
+
+    const setPresetSpeed = (speed) => {
+        setWpm(speed);
+    };
+
+    const toggleFullscreen = async () => {
+        if (!isFullscreen) {
+            const elem = fullscreenContainerRef.current;
+            try {
+                if (elem?.requestFullscreen) {
+                    await elem.requestFullscreen();
+                } else if (elem?.webkitRequestFullscreen) {
+                    await elem.webkitRequestFullscreen();
+                } else if (elem?.mozRequestFullScreen) {
+                    await elem.mozRequestFullScreen();
+                } else if (elem?.msRequestFullscreen) {
+                    await elem.msRequestFullscreen();
+                }
+            } catch (err) {
+                console.log('Fullscreen error:', err);
+            }
+        } else {
+            try {
+                if (document.exitFullscreen) {
+                    await document.exitFullscreen();
+                } else if (document.webkitExitFullscreen) {
+                    await document.webkitExitFullscreen();
+                } else if (document.mozCancelFullScreen) {
+                    await document.mozCancelFullScreen();
+                } else if (document.msExitFullscreen) {
+                    await document.msExitFullscreen();
+                }
+            } catch (err) {
+                console.log('Exit fullscreen error:', err);
+            }
+        }
+    };
+
+
+    const getCurrentWord = () => {
+        if (words.length === 0 || currentIndex >= words.length) {
+            return { word: '', focusIndex: 0, before: '', focus: '', after: '' };
+        }
+
+        const word = words[currentIndex];
+        const letters = word.split('');
+        
+        // Calculate optimal recognition point (ORP)
+        let focusIndex;
+        if (word.length <= 2) {
+            focusIndex = 0;
+        } else if (word.length <= 5) {
+            focusIndex = 1;
+        } else if (word.length <= 9) {
+            focusIndex = 2;
+        } else {
+            focusIndex = 3;
+        }
+
+        // Split word into before, focus, and after parts
+        const before = letters.slice(0, focusIndex).join('');
+        const focus = letters[focusIndex] || '';
+        const after = letters.slice(focusIndex + 1).join('');
+
+        return { word, focusIndex, before, focus, after };
+    };
+
+    const { word, focusIndex, before, focus, after } = getCurrentWord();
+    const progress = words.length > 0 ? ((smoothProgress / words.length) * 100).toFixed(1) : 0;
+    const wordsRemaining = words.length - Math.floor(smoothProgress);
+    const timeRemaining = wordsRemaining > 0 ? ((wordsRemaining / wpm) * 60).toFixed(0) : 0;
+
+    return (
+        <div className="flex flex-col min-h-screen p-3 sm:p-5 transition-all duration-300" style={{ background: currentTheme.bg, color: currentTheme.text }}>
+            <div className="text-center py-8 mb-4">
+                <h1 className="text-5xl sm:text-6xl font-black mb-3 transition-colors tracking-tight" style={{ 
+                    background: 'linear-gradient(90deg, #cc0000 0%, #ff0040 50%, #880000 100%)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    textShadow: '0 0 40px rgba(204, 0, 0, 0.5)'
+                }}>VELOCITY WORDS</h1>
+                <p className="text-lg sm:text-xl mb-2 transition-colors font-bold tracking-wide" style={{ 
+                    color: '#ff0040',
+                    textShadow: '0 0 20px rgba(255, 0, 64, 0.6)'
+                }}>SPEED READER</p>
+                <p className="text-xs sm:text-sm transition-colors opacity-75" style={{ color: colorTheme === 'light' ? '#999' : '#888' }}>
+                    📱 Swipe Left/Right to Skip • Tap ⛶ for Fullscreen
+                </p>
+            </div>
+
+            <div className="rounded-2xl p-4 sm:p-5 mb-4 sm:mb-5 transition-all backdrop-blur-md" 
+                style={{ 
+                    background: currentTheme.panel,
+                    border: `1px solid ${currentTheme.border}`,
+                    boxShadow: currentTheme.shadow
+                }}>
+                <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                        Your Text
+                    </label>
+                    <button
+                        className="px-3 py-1 rounded-md text-xs font-medium transition-all touch-manipulation"
+                        style={{ 
+                            backgroundColor: showDocuments ? currentTheme.focusColor : currentTheme.bg,
+                            color: showDocuments ? '#fff' : currentTheme.text,
+                            border: `1px solid ${currentTheme.border}`
+                        }}
+                        onClick={() => setShowDocuments(!showDocuments)}
+                    >
+                        📚 {showDocuments ? 'Hide' : 'My Docs'} ({savedDocuments.length})
+                    </button>
+                </div>
+
+                {/* Document Title Input */}
+                <input
+                    type="text"
+                    className="w-full mb-2 rounded-lg p-2 text-sm outline-none transition-colors"
+                    style={{ 
+                        backgroundColor: currentTheme.bg,
+                        color: currentTheme.text,
+                        border: `1px solid ${currentTheme.border}`
+                    }}
+                    placeholder="Document title (optional)"
+                    value={documentTitle}
+                    onChange={(e) => setDocumentTitle(e.target.value)}
+                    onFocus={(e) => e.target.style.borderColor = currentTheme.focusColor}
+                    onBlur={(e) => e.target.style.borderColor = currentTheme.border}
+                />
+
+                <textarea
+                    className="w-full min-h-[80px] sm:min-h-[120px] rounded-lg p-3 sm:p-4 text-sm resize-y outline-none transition-colors"
+                    style={{ 
+                        backgroundColor: currentTheme.bg,
+                        color: currentTheme.text,
+                        border: `2px solid ${currentTheme.border}`
+                    }}
+                    value={inputText}
+                    onChange={(e) => setInputText(e.target.value)}
+                    placeholder="Enter text to read..."
+                    onFocus={(e) => e.target.style.borderColor = currentTheme.focusColor}
+                    onBlur={(e) => e.target.style.borderColor = currentTheme.border}
+                />
+                
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                    <button 
+                        className="font-semibold py-3 px-3 rounded-lg transition-all touch-manipulation text-sm hover:opacity-80 active:scale-95"
+                        style={{ 
+                            backgroundColor: currentTheme.bg,
+                            color: currentTheme.text,
+                            border: `1px solid ${currentTheme.border}`
+                        }}
+                        onClick={() => fileInputRef.current?.click()}
+                        title="Upload PDF, DOCX, EPUB, TXT, MD, RTF"
+                    >
+                        📄 Upload
+                    </button>
+                    <button 
+                        className="font-semibold py-3 px-3 rounded-lg transition-all touch-manipulation text-sm disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-80 active:scale-95"
+                        style={{ 
+                            backgroundColor: currentTheme.bg,
+                            color: currentTheme.text,
+                            border: `1px solid ${currentTheme.border}`
+                        }}
+                        onClick={saveDocument}
+                        disabled={!inputText.trim()}
+                    >
+                        💾 Save
+                    </button>
+                    <button 
+                        className="font-semibold py-3 px-3 rounded-lg transition-all touch-manipulation hover:opacity-90 active:scale-95 disabled:opacity-50"
+                        style={{ 
+                            background: currentTheme.focusColor, 
+                            color: '#fff',
+                            boxShadow: `0 4px 20px ${currentTheme.focusColor}40`
+                        }}
+                        onClick={loadText}
+                        disabled={!inputText.trim()}
+                    >
+                        ▶ Load ({inputText.trim().split(/\s+/).filter(w => w).length})
+                    </button>
+                </div>
+
+                {/* Hidden file input */}
+                <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".txt,.md,.pdf,.docx,.epub,.rtf"
+                    style={{ display: 'none' }}
+                    onChange={handleFileUpload}
+                />
+            </div>
+
+            {/* Saved Documents List */}
+            {showDocuments && savedDocuments.length > 0 && (
+                <div className="rounded-2xl p-4 sm:p-5 mb-4 transition-colors" style={{ backgroundColor: currentTheme.panel, border: `1px solid ${currentTheme.border}` }}>
+                    <h3 className="text-lg font-semibold mb-3">Saved Documents</h3>
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                        {savedDocuments.map(doc => (
+                            <div 
+                                key={doc.id}
+                                className="rounded-lg p-3 transition-all cursor-pointer hover:opacity-90 active:scale-[0.98]"
+                                style={{ 
+                                    backgroundColor: currentDocumentId === doc.id ? currentTheme.focusColor + '20' : currentTheme.bg,
+                                    border: `1px solid ${currentDocumentId === doc.id ? currentTheme.focusColor : currentTheme.border}`
+                                }}
+                                onClick={() => loadDocument(doc)}
+                            >
+                                <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                        <h4 className="font-semibold text-sm mb-1">{doc.title}</h4>
+                                        <p className="text-xs" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                            {doc.wordCount} words
+                                            {doc.lastPosition > 0 && ` • ${Math.round((doc.lastPosition / doc.wordCount) * 100)}% complete`}
+                                        </p>
+                                        <p className="text-xs mt-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                                            {new Date(doc.createdAt).toLocaleDateString()}
+                                        </p>
+                                    </div>
+                                    <button
+                                        className="ml-3 px-2 py-1 rounded text-xs transition-all touch-manipulation hover:bg-red-500 hover:text-white active:scale-95"
+                                        style={{ 
+                                            backgroundColor: currentTheme.bg,
+                                            color: '#ff4444',
+                                            border: `1px solid ${currentTheme.border}`
+                                        }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            deleteDocument(doc.id);
+                                        }}
+                                    >
+                                        🗑️
+                                    </button>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {showDocuments && savedDocuments.length === 0 && (
+                <div className="rounded-2xl p-4 mb-4 text-center transition-colors" style={{ backgroundColor: currentTheme.panel, border: `1px solid ${currentTheme.border}` }}>
+                    <p style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>No saved documents yet. Save your first document above!</p>
+                </div>
+            )}
+
+            <div 
+                ref={fullscreenContainerRef}
+                className="flex-1 flex items-center justify-center relative min-h-[200px] sm:min-h-[300px] reading-area-swipe"
+            >
+                {words.length === 0 ? (
+                    <div className="text-center px-4 py-12">
+                        <div className="text-6xl mb-4">📖</div>
+                        <h3 className="text-xl font-bold mb-2" style={{ color: currentTheme.focusColor }}>
+                            Ready to Speed Read?
+                        </h3>
+                        <p className="text-sm mb-4" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                            Paste text, upload a document, or load saved content to begin
+                        </p>
+                        <div className="sm:hidden bg-opacity-10 rounded-lg p-3 mb-4 text-xs text-left max-w-xs mx-auto" style={{ backgroundColor: currentTheme.focusColor, border: `1px solid ${currentTheme.focusColor}40` }}>
+                            <p className="font-bold mb-2" style={{ color: currentTheme.focusColor }}>📱 Mobile Tips:</p>
+                            <ul className="space-y-1 text-left" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                <li>• Load text, then tap <strong>▶ Play</strong></li>
+                                <li>• Tap <strong>⛶ Fullscreen</strong> for immersive reading</li>
+                                <li>• Swipe left/right to skip words</li>
+                                <li>• Tap <strong>⚙️ Settings</strong> to customize</li>
+                            </ul>
+                        </div>
+                        <div className="flex gap-2 justify-center flex-wrap">
+                            <button
+                                className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-80"
+                                style={{ 
+                                    background: currentTheme.focusColor,
+                                    color: '#fff',
+                                    boxShadow: `0 4px 16px ${currentTheme.focusColor}40`
+                                }}
+                                onClick={() => fileInputRef.current?.click()}
+                            >
+                                📄 Upload File
+                            </button>
+                            <button
+                                className="px-4 py-2 rounded-lg text-sm font-medium transition-all hover:opacity-80"
+                                style={{ 
+                                    background: currentTheme.panel,
+                                    border: `1px solid ${currentTheme.border}`,
+                                    backdropFilter: 'blur(5px)',
+                                    color: currentTheme.text
+                                }}
+                                onClick={() => setShowDocuments(true)}
+                            >
+                                📚 My Documents
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                <div className="relative w-full max-w-[600px] h-[150px] sm:h-[200px] flex items-center justify-center px-4">
+                    <button
+                        className="absolute top-2 right-2 px-3 py-2 rounded-lg text-xs font-bold transition-all sm:hidden"
+                        style={{ 
+                            background: currentTheme.focusColor,
+                            color: '#fff',
+                            border: '2px solid rgba(255,255,255,0.2)',
+                            zIndex: 10
+                        }}
+                        onClick={toggleFullscreen}
+                    >
+                        {isFullscreen ? '⊗ Exit' : '⛶ Full'}
+                    </button>
+                    {/* Guide lines */}
+                    {showGuideLines && (
+                        <div className="absolute w-full h-full flex flex-col justify-center pointer-events-none">
+                            <div className="h-0.5 my-8 sm:my-12 transition-opacity" style={{ backgroundColor: currentTheme.border, opacity: guideLineOpacity / 100 }}></div>
+                            <div className="h-0.5 my-8 sm:my-12 transition-opacity" style={{ backgroundColor: currentTheme.border, opacity: guideLineOpacity / 100 }}></div>
+                        </div>
+                    )}
+                    
+                    {/* Focus marker */}
+                    <div className="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-0.5 h-12 sm:h-16 pointer-events-none transition-opacity" 
+                         style={{ backgroundColor: currentTheme.focusColor, opacity: focusLineOpacity / 100 }}></div>
+                    
+                    {/* Word display - focus letter ALWAYS aligned with center line */}
+                    <div 
+                        className="absolute top-1/2 font-medium z-10" 
+                        style={{ 
+                            fontFamily: "'Courier New', monospace", 
+                            letterSpacing: '0',
+                            fontSize: `${getResponsiveFontSize(word)}px`,
+                            left: '50%',
+                            transform: 'translateY(-50%)',
+                            marginLeft: `${-(focusIndex + 0.5) * 0.6}em`,
+                            maxWidth: '90vw',
+                            overflow: 'hidden',
+                            textOverflow: 'clip',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        {word.split('').map((letter, idx) => (
+                            <span 
+                                key={idx}
+                                style={{ 
+                                    color: idx === focusIndex ? currentTheme.focusColor : currentTheme.text,
+                                    display: 'inline-block'
+                                }}
+                            >
+                                {letter}
+                            </span>
+                        ))}
+                    </div>
+                </div>
+                )}
+            </div>
+
+            {/* Progress Bar with Scrubbing */}
+            <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                    <span className="text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>Progress</span>
+                    <div className="flex gap-2">
+                        <button
+                            className="px-3 py-1 rounded-md text-xs font-medium transition-all touch-manipulation"
+                            style={{ 
+                                backgroundColor: showStats ? currentTheme.focusColor : currentTheme.panel,
+                                color: showStats ? '#fff' : currentTheme.text,
+                                border: `1px solid ${currentTheme.border}`
+                            }}
+                            onClick={() => setShowStats(!showStats)}
+                        >
+                            📊 {showStats ? 'Hide' : 'Stats'}
+                        </button>
+                        <button
+                            className="px-3 py-1 rounded-md text-xs font-medium transition-all touch-manipulation"
+                            style={{ 
+                                backgroundColor: showSettings ? currentTheme.focusColor : currentTheme.panel,
+                                color: showSettings ? '#fff' : currentTheme.text,
+                                border: `1px solid ${currentTheme.border}`
+                            }}
+                            onClick={() => setShowSettings(!showSettings)}
+                        >
+                            ⚙️ {showSettings ? 'Hide' : 'Settings'}
+                        </button>
+                    </div>
+                </div>
+                <div 
+                    ref={progressBarRef}
+                    className="relative h-3 rounded-full cursor-pointer overflow-hidden touch-none transition-colors"
+                    style={{ backgroundColor: colorTheme === 'light' ? '#e0e0e0' : '#333' }}
+                    onClick={handleProgressClick}
+                    onMouseDown={handleProgressDragStart}
+                    onTouchStart={handleProgressDragStart}
+                >
+                    <div 
+                        className="absolute h-full"
+                        style={{ 
+                            width: `${progress}%`,
+                            backgroundColor: currentTheme.focusColor,
+                            transition: 'none' // Instant updates for smooth animation
+                        }}
+                    />
+                    <div 
+                        className="absolute top-1/2 transform -translate-y-1/2 w-5 h-5 rounded-full shadow-lg cursor-grab active:cursor-grabbing"
+                        style={{ 
+                            left: `${progress}%`, 
+                            marginLeft: '-10px',
+                            backgroundColor: currentTheme.bg,
+                            border: `2px solid ${currentTheme.focusColor}`,
+                            transition: 'none' // Instant updates for smooth animation
+                        }}
+                    />
+                </div>
+                <div className="flex justify-between items-center mt-2 text-xs" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                    <span>Word {currentIndex + 1} of {words.length}</span>
+                    <span>{progress}%</span>
+                    <span>~{timeRemaining}s left</span>
+                </div>
+            </div>
+
+            {/* Stats Panel */}
+            {showStats && (
+                <div className="rounded-2xl p-5 sm:p-6 mb-4 transition-all" style={{ backgroundColor: currentTheme.panel, border: `1px solid ${currentTheme.border}` }}>
+                    <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">Your Statistics</h3>
+                        <div className="flex gap-2">
+                            <button
+                                className="px-3 py-1 rounded-md text-xs transition-all touch-manipulation hover:opacity-80"
+                                style={{
+                                    backgroundColor: currentTheme.bg,
+                                    color: currentTheme.text,
+                                    border: `1px solid ${currentTheme.border}`
+                                }}
+                                onClick={() => setShowExportImport(true)}
+                            >
+                                ⚙️ Backup
+                            </button>
+                            {readingHistory.length > 0 && (
+                                <button
+                                    className="px-3 py-1 rounded-md text-xs transition-all touch-manipulation"
+                                    style={{
+                                        backgroundColor: currentTheme.bg,
+                                        color: '#ff4444',
+                                        border: `1px solid ${currentTheme.border}`
+                                    }}
+                                    onClick={clearHistory}
+                                >
+                                    Clear All
+                                </button>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Current Session Stats */}
+                    {sessionWordsRead > 0 && (
+                        <div className="rounded-lg p-4 mb-4" style={{ backgroundColor: currentTheme.bg, border: `1px solid ${currentTheme.focusColor}` }}>
+                            <h4 className="text-sm font-semibold mb-2" style={{ color: currentTheme.focusColor }}>Current Session</h4>
+                            <div className="grid grid-cols-2 gap-3 text-sm">
+                                <div>
+                                    <p style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>Words Read</p>
+                                    <p className="font-semibold text-lg">{sessionWordsRead}</p>
+                                </div>
+                                <div>
+                                    <p style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>Time</p>
+                                    <p className="font-semibold text-lg">
+                                        {sessionStartTime ? formatDuration(Math.floor((Date.now() - sessionStartTime) / 1000)) : '0s'}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Overall Stats */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
+                        <div className="rounded-lg p-4 text-center" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(5px)" }}>
+                            <p className="text-xs mb-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>Total Words</p>
+                            <p className="font-bold text-2xl" style={{ color: currentTheme.focusColor }}>
+                                {totalWordsRead.toLocaleString()}
+                            </p>
+                        </div>
+                        <div className="rounded-lg p-4 text-center" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(5px)" }}>
+                            <p className="text-xs mb-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>Avg Speed</p>
+                            <p className="font-bold text-2xl" style={{ color: currentTheme.focusColor }}>
+                                {averageWPM}
+                            </p>
+                            <p className="text-xs" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>WPM</p>
+                        </div>
+                        <div className="rounded-lg p-4 text-center" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(5px)" }}>
+                            <p className="text-xs mb-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>Sessions</p>
+                            <p className="font-bold text-2xl" style={{ color: currentTheme.focusColor }}>
+                                {readingHistory.length}
+                            </p>
+                        </div>
+                        <div className="rounded-lg p-4 text-center" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(5px)" }}>
+                            <p className="text-xs mb-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>Streak</p>
+                            <p className="font-bold text-2xl" style={{ color: currentTheme.focusColor }}>
+                                🔥 {readingStreak}
+                            </p>
+                            <p className="text-xs" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>days</p>
+                        </div>
+                    </div>
+
+                    {/* Reading History */}
+                    {readingHistory.length > 0 && (
+                        <div>
+                            <h4 className="text-sm font-semibold mb-3">Recent Sessions</h4>
+                            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                                {readingHistory.slice(0, 10).map(session => (
+                                    <div 
+                                        key={session.id}
+                                        className="rounded-lg p-3"
+                                        style={{ backgroundColor: currentTheme.bg, border: `1px solid ${currentTheme.border}` }}
+                                    >
+                                        <div className="flex items-start justify-between mb-2">
+                                            <div className="flex-1">
+                                                <h5 className="font-semibold text-sm">{session.documentTitle}</h5>
+                                                <p className="text-xs" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                                                    {new Date(session.date).toLocaleString()}
+                                                </p>
+                                            </div>
+                                            <div className="text-right">
+                                                <p className="font-bold" style={{ color: currentTheme.focusColor }}>{session.wpm} WPM</p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-4 text-xs" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                            <span>📖 {session.wordsRead} words</span>
+                                            <span>⏱️ {formatDuration(session.duration)}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {readingHistory.length === 0 && (
+                        <div className="text-center py-8" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            <p className="text-sm">No reading sessions yet.</p>
+                            <p className="text-xs mt-2">Start reading to track your progress!</p>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Settings Panel */}
+            {showSettings && (
+                <div 
+                    className="fixed inset-0 z-50 bg-black bg-opacity-80 overflow-y-auto p-0 sm:p-4 sm:flex sm:items-center sm:justify-center"
+                    style={{ WebkitOverflowScrolling: 'touch' }}
+                    onClick={() => setShowSettings(false)}
+                >
+                    <div 
+                        className="min-h-screen sm:min-h-0 bg-gray-900 sm:rounded-2xl p-6 max-w-2xl w-full sm:my-8"
+                        style={{ backgroundColor: currentTheme.panel, border: `1px solid ${currentTheme.border}` }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center mb-4 sticky top-0 pb-4" style={{ backgroundColor: currentTheme.panel, zIndex: 10 }}>
+                            <h3 className="text-xl font-bold">Settings</h3>
+                            <button
+                                className="px-4 py-2 rounded-lg font-bold active:scale-95"
+                                style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                onClick={() => setShowSettings(false)}
+                            >
+                                ✕ Close
+                            </button>
+                        </div>
+
+                    <h4 className="text-lg font-semibold mb-4">Visual Settings</h4>
+                    
+                    {/* Font Size */}
+                    <div className="mb-5">
+                        <label className="block mb-2 text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                            Text Size
+                        </label>
+                        <div className="grid grid-cols-3 gap-2">
+                            {['small', 'medium', 'large'].map(size => (
+                                <button
+                                    key={size}
+                                    className="px-4 py-3 rounded-md transition-all touch-manipulation capitalize font-semibold"
+                                    style={{
+                                        backgroundColor: fontSize === size ? currentTheme.focusColor : currentTheme.bg,
+                                        color: fontSize === size ? '#fff' : currentTheme.text,
+                                        border: `1px solid ${fontSize === size ? currentTheme.focusColor : currentTheme.border}`,
+                                        fontSize: size === 'small' ? '14px' : size === 'medium' ? '16px' : '18px'
+                                    }}
+                                    onClick={() => setFontSize(size)}
+                                >
+                                    {size}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Color Theme */}
+                    <div className="mb-5">
+                        <label className="block mb-2 text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                            Color Theme
+                        </label>
+                        <div className="grid grid-cols-2 gap-2">
+                            {Object.keys(themes).map(theme => (
+                                <button
+                                    key={theme}
+                                    className="px-3 py-2 rounded-md text-sm transition-all touch-manipulation capitalize flex items-center justify-between"
+                                    style={{
+                                        backgroundColor: colorTheme === theme ? currentTheme.focusColor : currentTheme.bg,
+                                        color: colorTheme === theme ? '#fff' : currentTheme.text,
+                                        border: `1px solid ${colorTheme === theme ? currentTheme.focusColor : currentTheme.border}`
+                                    }}
+                                    onClick={() => setColorTheme(theme)}
+                                >
+                                    <span>
+                                        {theme === 'velocity' ? '⚡ Velocity' : 
+                                         theme === 'highContrast' ? 'High Contrast' : 
+                                         theme.charAt(0).toUpperCase() + theme.slice(1)}
+                                    </span>
+                                    <div className="w-4 h-4 rounded-full" style={{ backgroundColor: themes[theme].focusColor }}></div>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
+                    {/* Guide Lines Toggle */}
+                    <div className="mb-5">
+                        <label className="flex items-center justify-between cursor-pointer touch-manipulation">
+                            <span className="text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                Show Guide Lines
+                            </span>
+                            <div 
+                                className="relative w-12 h-6 rounded-full transition-colors"
+                                style={{ backgroundColor: showGuideLines ? currentTheme.focusColor : currentTheme.border }}
+                                onClick={() => setShowGuideLines(!showGuideLines)}
+                            >
+                                <div 
+                                    className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
+                                    style={{ transform: showGuideLines ? 'translateX(26px)' : 'translateX(4px)' }}
+                                ></div>
+                            </div>
+                        </label>
+                    </div>
+
+                    {/* Guide Line Opacity */}
+                    {showGuideLines && (
+                        <div className="mb-5">
+                            <label className="block mb-2 text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                Guide Line Opacity: {guideLineOpacity}%
+                            </label>
+                            <input
+                                type="range"
+                                className="w-full h-1.5 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                                style={{
+                                    background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${guideLineOpacity}%, ${currentTheme.border} ${guideLineOpacity}%, ${currentTheme.border} 100%)`
+                                }}
+                                min="10"
+                                max="100"
+                                step="10"
+                                value={guideLineOpacity}
+                                onChange={(e) => setGuideLineOpacity(parseInt(e.target.value))}
+                            />
+                        </div>
+                    )}
+
+                    {/* Focus Line Opacity */}
+                    <div className="mb-5">
+                        <label className="block mb-2 text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                            Focus Line Opacity: {focusLineOpacity}%
+                        </label>
+                        <input
+                            type="range"
+                            className="w-full h-1.5 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                            style={{
+                                background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${focusLineOpacity}%, ${currentTheme.border} ${focusLineOpacity}%, ${currentTheme.border} 100%)`
+                            }}
+                            min="0"
+                            max="100"
+                            step="10"
+                            value={focusLineOpacity}
+                            onChange={(e) => setFocusLineOpacity(parseInt(e.target.value))}
+                        />
+                    </div>
+
+                    <hr style={{ borderColor: currentTheme.border, margin: '20px 0' }} />
+
+                    <h3 className="text-lg font-semibold mb-4">Smart Reading</h3>
+
+                    {/* Punctuation Pausing Toggle */}
+                    <div className="mb-5">
+                        <label className="flex items-center justify-between cursor-pointer touch-manipulation">
+                            <span className="text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                Punctuation Pausing
+                            </span>
+                            <div 
+                                className="relative w-12 h-6 rounded-full transition-colors"
+                                style={{ backgroundColor: punctuationPausing ? currentTheme.focusColor : currentTheme.border }}
+                                onClick={() => setPunctuationPausing(!punctuationPausing)}
+                            >
+                                <div 
+                                    className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
+                                    style={{ transform: punctuationPausing ? 'translateX(26px)' : 'translateX(4px)' }}
+                                ></div>
+                            </div>
+                        </label>
+                        <p className="text-xs mt-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            Brief pauses at commas and periods for better comprehension
+                        </p>
+                    </div>
+
+                    {/* Pause Duration Settings */}
+                    {punctuationPausing && (
+                        <div className="mb-5 ml-4 p-3 rounded-lg" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(5px)" }}>
+                            <div className="mb-3">
+                                <label className="block mb-1 text-xs font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                    Comma Pause: {commaPause}ms
+                                </label>
+                                <input
+                                    type="range"
+                                    className="w-full h-1 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                                    style={{
+                                        background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${(commaPause / 200) * 100}%, ${currentTheme.border} ${(commaPause / 200) * 100}%, ${currentTheme.border} 100%)`
+                                    }}
+                                    min="0"
+                                    max="200"
+                                    step="25"
+                                    value={commaPause}
+                                    onChange={(e) => setCommaPause(parseInt(e.target.value))}
+                                />
+                            </div>
+                            <div className="mb-3">
+                                <label className="block mb-1 text-xs font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                    Period Pause: {periodPause}ms
+                                </label>
+                                <input
+                                    type="range"
+                                    className="w-full h-1 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                                    style={{
+                                        background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${(periodPause / 400) * 100}%, ${currentTheme.border} ${(periodPause / 400) * 100}%, ${currentTheme.border} 100%)`
+                                    }}
+                                    min="0"
+                                    max="400"
+                                    step="50"
+                                    value={periodPause}
+                                    onChange={(e) => setPeriodPause(parseInt(e.target.value))}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Long Word Slowdown Toggle */}
+                    <div className="mb-5">
+                        <label className="flex items-center justify-between cursor-pointer touch-manipulation">
+                            <span className="text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                Long Word Slowdown
+                            </span>
+                            <div 
+                                className="relative w-12 h-6 rounded-full transition-colors"
+                                style={{ backgroundColor: longWordSlowdown ? currentTheme.focusColor : currentTheme.border }}
+                                onClick={() => setLongWordSlowdown(!longWordSlowdown)}
+                            >
+                                <div 
+                                    className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
+                                    style={{ transform: longWordSlowdown ? 'translateX(26px)' : 'translateX(4px)' }}
+                                ></div>
+                            </div>
+                        </label>
+                        <p className="text-xs mt-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            Automatically slow down 30% for words longer than 8 characters
+                        </p>
+                    </div>
+
+                    <hr style={{ borderColor: currentTheme.border, margin: '20px 0' }} />
+
+                    <h3 className="text-lg font-semibold mb-4">Advanced Features</h3>
+
+                    {/* Speed Ramping */}
+                    <div className="mb-5">
+                        <label className="flex items-center justify-between cursor-pointer touch-manipulation">
+                            <span className="text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                Speed Ramping
+                            </span>
+                            <div 
+                                className="relative w-12 h-6 rounded-full transition-colors"
+                                style={{ backgroundColor: speedRamping ? currentTheme.focusColor : currentTheme.border }}
+                                onClick={() => setSpeedRamping(!speedRamping)}
+                            >
+                                <div 
+                                    className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
+                                    style={{ transform: speedRamping ? 'translateX(26px)' : 'translateX(4px)' }}
+                                ></div>
+                            </div>
+                        </label>
+                        <p className="text-xs mt-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            Gradually increase speed as you warm up
+                        </p>
+                    </div>
+
+                    {speedRamping && (
+                        <div className="mb-5 ml-4 p-3 rounded-lg" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(5px)" }}>
+                            <div className="mb-3">
+                                <label className="block mb-1 text-xs font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                    Start Speed: {rampStartWPM} WPM
+                                </label>
+                                <input
+                                    type="range"
+                                    className="w-full h-1 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                                    style={{
+                                        background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${((rampStartWPM - 100) / 400) * 100}%, ${currentTheme.border} ${((rampStartWPM - 100) / 400) * 100}%, ${currentTheme.border} 100%)`
+                                    }}
+                                    min="100"
+                                    max="500"
+                                    step="25"
+                                    value={rampStartWPM}
+                                    onChange={(e) => setRampStartWPM(parseInt(e.target.value))}
+                                />
+                            </div>
+                            <div className="mb-3">
+                                <label className="block mb-1 text-xs font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                    End Speed: {rampEndWPM} WPM
+                                </label>
+                                <input
+                                    type="range"
+                                    className="w-full h-1 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                                    style={{
+                                        background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${((rampEndWPM - 100) / 900) * 100}%, ${currentTheme.border} ${((rampEndWPM - 100) / 900) * 100}%, ${currentTheme.border} 100%)`
+                                    }}
+                                    min="100"
+                                    max="1000"
+                                    step="25"
+                                    value={rampEndWPM}
+                                    onChange={(e) => setRampEndWPM(parseInt(e.target.value))}
+                                />
+                            </div>
+                            <div>
+                                <label className="block mb-1 text-xs font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                    Ramp Duration: {rampDuration} words
+                                </label>
+                                <input
+                                    type="range"
+                                    className="w-full h-1 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                                    style={{
+                                        background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${((rampDuration - 10) / 90) * 100}%, ${currentTheme.border} ${((rampDuration - 10) / 90) * 100}%, ${currentTheme.border} 100%)`
+                                    }}
+                                    min="10"
+                                    max="100"
+                                    step="5"
+                                    value={rampDuration}
+                                    onChange={(e) => setRampDuration(parseInt(e.target.value))}
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Daily Goal */}
+                    <div className="mb-5">
+                        <label className="block mb-2 text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                            Daily Reading Goal: {dailyGoal} words
+                        </label>
+                        <input
+                            type="range"
+                            className="w-full h-1.5 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                            style={{
+                                background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${((dailyGoal - 100) / 4900) * 100}%, ${currentTheme.border} ${((dailyGoal - 100) / 4900) * 100}%, ${currentTheme.border} 100%)`
+                            }}
+                            min="100"
+                            max="5000"
+                            step="100"
+                            value={dailyGoal}
+                            onChange={(e) => updateDailyGoal(parseInt(e.target.value))}
+                        />
+                        <div className="mt-2 p-2 rounded" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, backdropFilter: "blur(5px)" }}>
+                            <div className="flex justify-between text-xs mb-1">
+                                <span>Today's Progress</span>
+                                <span className="font-semibold">{todayWordsRead} / {dailyGoal}</span>
+                            </div>
+                            <div className="w-full h-2 rounded-full" style={{ backgroundColor: currentTheme.border }}>
+                                <div 
+                                    className="h-full rounded-full transition-all"
+                                    style={{ 
+                                        width: `${Math.min((todayWordsRead / dailyGoal) * 100, 100)}%`,
+                                        backgroundColor: currentTheme.focusColor
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Auto-save */}
+                    <div className="mb-5">
+                        <label className="flex items-center justify-between cursor-pointer touch-manipulation">
+                            <span className="text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                                Auto-save Position
+                            </span>
+                            <div 
+                                className="relative w-12 h-6 rounded-full transition-colors"
+                                style={{ backgroundColor: autoSave ? currentTheme.focusColor : currentTheme.border }}
+                                onClick={() => setAutoSave(!autoSave)}
+                            >
+                                <div 
+                                    className="absolute top-1 w-4 h-4 rounded-full bg-white transition-transform"
+                                    style={{ transform: autoSave ? 'translateX(26px)' : 'translateX(4px)' }}
+                                ></div>
+                            </div>
+                        </label>
+                        <p className="text-xs mt-1" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            Automatically save your reading position
+                        </p>
+                    </div>
+
+                    {/* Focus Exercise Button */}
+                    <div className="mb-0">
+                        <button
+                            className="w-full py-3 rounded-lg font-semibold transition-all touch-manipulation hover:opacity-90 active:scale-98"
+                            style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                            onClick={startFocusExercise}
+                        >
+                            🎯 Start Focus Exercise
+                        </button>
+                        <p className="text-xs mt-2 text-center" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            Practice keeping your eyes on the center line
+                        </p>
+                    </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="rounded-2xl p-5 sm:p-7 mt-4 sm:mt-5 transition-colors" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, boxShadow: currentTheme.shadow, backdropFilter: "blur(10px)" }}>
+                <div className="mb-5 sm:mb-6">
+                    <label className="block mb-2 text-sm font-medium" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>Reading Speed</label>
+                    <div className="flex items-center gap-3 sm:gap-4">
+                        <input
+                            type="range"
+                            className="flex-1 h-1.5 rounded-full outline-none appearance-none cursor-pointer touch-manipulation"
+                            style={{
+                                background: `linear-gradient(to right, ${currentTheme.focusColor} 0%, ${currentTheme.focusColor} ${((wpm - 100) / 900) * 100}%, ${currentTheme.border} ${((wpm - 100) / 900) * 100}%, ${currentTheme.border} 100%)`
+                            }}
+                            min="100"
+                            max="1000"
+                            step="25"
+                            value={wpm}
+                            onChange={handleSpeedChange}
+                        />
+                        <span className="min-w-[70px] sm:min-w-[80px] text-right font-semibold text-sm sm:text-base">{wpm} WPM</span>
+                    </div>
+                    <div className="flex gap-2 mt-2 flex-wrap">
+                        {[
+                            { label: 'Slow', speed: 150 },
+                            { label: 'Medium', speed: 350 },
+                            { label: 'Fast', speed: 550 },
+                            { label: 'Very Fast', speed: 800 }
+                        ].map(preset => (
+                            <button 
+                                key={preset.speed}
+                                className="px-3 sm:px-4 py-2 rounded-md text-xs transition-all touch-manipulation"
+                                style={{
+                                    backgroundColor: wpm === preset.speed ? currentTheme.focusColor : currentTheme.bg,
+                                    color: wpm === preset.speed ? '#fff' : currentTheme.text,
+                                    border: `1px solid ${wpm === preset.speed ? currentTheme.focusColor : currentTheme.border}`
+                                }}
+                                onClick={() => setPresetSpeed(preset.speed)}
+                            >
+                                {preset.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex gap-2">
+                    <button
+                        className="flex-1 font-semibold py-3 px-3 sm:px-5 rounded-lg transition-all text-sm sm:text-base touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80 active:scale-98"
+                        style={{
+                            backgroundColor: currentTheme.panel === '#111111' ? '#222' : colorTheme === 'light' ? '#e0e0e0' : '#333',
+                            color: currentTheme.text
+                        }}
+                        onClick={skipBackward}
+                        disabled={words.length === 0}
+                        title="Skip back 10 words (←)"
+                    >
+                        ⏪ Back 10
+                    </button>
+                    <button
+                        className="flex-[2] font-semibold py-3 px-5 rounded-lg transition-all touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-90 active:scale-98"
+                        style={{ 
+                            background: currentTheme.focusColor, 
+                            color: '#fff',
+                            boxShadow: `0 4px 24px ${currentTheme.focusColor}60`,
+                            animation: !isPlaying && words.length > 0 ? 'pulse 2s infinite' : 'none'
+                        }}
+                        onClick={handlePlayPause}
+                        disabled={words.length === 0 && !inputText.trim()}
+                        title="Play/Pause (Space)"
+                    >
+                        {isPlaying ? '⏸ Pause' : '▶ Play'}
+                    </button>
+                    <button
+                        className="flex-1 font-semibold py-3 px-3 sm:px-5 rounded-lg transition-all text-sm sm:text-base touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80 active:scale-98"
+                        style={{
+                            backgroundColor: currentTheme.panel === '#111111' ? '#222' : colorTheme === 'light' ? '#e0e0e0' : '#333',
+                            color: currentTheme.text
+                        }}
+                        onClick={skipForward}
+                        disabled={words.length === 0}
+                        title="Skip forward 10 words (→)"
+                    >
+                        Forward 10 ⏩
+                    </button>
+                </div>
+                
+                <button
+                    className="w-full mt-2 font-semibold py-3 px-5 rounded-lg transition-all touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed hover:opacity-80 active:scale-98"
+                    style={{
+                        backgroundColor: currentTheme.panel === '#111111' ? '#222' : colorTheme === 'light' ? '#e0e0e0' : '#333',
+                        color: currentTheme.text
+                    }}
+                    onClick={handleReset}
+                    disabled={words.length === 0}
+                    title="Reset to beginning (Home)"
+                >
+                    ↺ Reset to Start
+                </button>
+            </div>
+
+            {/* Enhancement Tools Panel */}
+            {words.length > 0 && (
+                <div className="rounded-2xl p-4 sm:p-5 mt-4 transition-colors" style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, boxShadow: currentTheme.shadow, backdropFilter: "blur(10px)" }}>
+                    <h3 className="text-sm font-semibold mb-3" style={{ color: colorTheme === 'light' ? '#666' : '#aaa' }}>
+                        Quick Tools
+                    </h3>
+                    
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+                        <button
+                            className="py-2 px-3 rounded-lg text-sm font-medium transition-all touch-manipulation hover:opacity-80 active:scale-95"
+                            style={{ backgroundColor: currentTheme.bg, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}
+                            onClick={addHighlight}
+                            title="Highlight current word (H)"
+                        >
+                            ⭐ Highlight
+                        </button>
+                        <button
+                            className="py-2 px-3 rounded-lg text-sm font-medium transition-all touch-manipulation hover:opacity-80 active:scale-95"
+                            style={{ backgroundColor: currentTheme.bg, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}
+                            onClick={() => {
+                                setShowNoteInput(true);
+                                setIsPlaying(false);
+                            }}
+                            title="Add note (N)"
+                        >
+                            📝 Note
+                        </button>
+                        <button
+                            className="py-2 px-3 rounded-lg text-sm font-medium transition-all touch-manipulation hover:opacity-80 active:scale-95"
+                            style={{ 
+                                backgroundColor: reReadStart !== null ? currentTheme.focusColor : currentTheme.bg,
+                                color: reReadStart !== null ? '#fff' : currentTheme.text,
+                                border: `1px solid ${reReadStart !== null ? currentTheme.focusColor : currentTheme.border}`
+                            }}
+                            onClick={startReReadSelection}
+                        >
+                            🔄 {reReadStart === null ? 'Mark' : reReadEnd === null ? 'End' : 'Ready'}
+                        </button>
+                        {reReadStart !== null && reReadEnd !== null && (
+                            <button
+                                className="py-2 px-3 rounded-lg text-sm font-medium transition-all touch-manipulation hover:opacity-90 active:scale-95"
+                                style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                onClick={reReadSection}
+                            >
+                                ▶ Re-read
+                            </button>
+                        )}
+                        {reReadStart !== null && (
+                            <button
+                                className="py-2 px-3 rounded-lg text-sm font-medium transition-all touch-manipulation hover:opacity-80 active:scale-95"
+                                style={{ backgroundColor: currentTheme.bg, color: '#ff4444', border: `1px solid ${currentTheme.border}` }}
+                                onClick={cancelReRead}
+                            >
+                                ✕ Cancel
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Note Input */}
+                    {showNoteInput && (
+                        <div className="mt-3 p-3 rounded-lg" style={{ backgroundColor: currentTheme.bg, border: `1px solid ${currentTheme.focusColor}` }}>
+                            <p className="text-xs mb-2" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                Note for: "{words[currentIndex]}"
+                            </p>
+                            <input
+                                type="text"
+                                className="w-full mb-2 rounded p-2 text-sm outline-none"
+                                style={{ 
+                                    backgroundColor: currentTheme.panel,
+                                    color: currentTheme.text,
+                                    border: `1px solid ${currentTheme.border}`
+                                }}
+                                placeholder="Enter your note..."
+                                value={currentNote}
+                                onChange={(e) => setCurrentNote(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        addNote();
+                                    } else if (e.key === 'Escape') {
+                                        setShowNoteInput(false);
+                                        setCurrentNote('');
+                                    }
+                                }}
+                                autoFocus
+                            />
+                            <div className="flex gap-2">
+                                <button
+                                    className="flex-1 py-2 rounded-lg text-sm font-medium transition-all touch-manipulation hover:opacity-90"
+                                    style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                    onClick={addNote}
+                                >
+                                    Save Note
+                                </button>
+                                <button
+                                    className="px-4 py-2 rounded-lg text-sm font-medium transition-all touch-manipulation hover:opacity-80"
+                                    style={{ backgroundColor: currentTheme.panel, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}
+                                    onClick={() => {
+                                        setShowNoteInput(false);
+                                        setCurrentNote('');
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Highlights & Notes Display */}
+                    {(highlights.length > 0 || notes.length > 0) && (
+                        <div className="mt-3 space-y-2 max-h-[200px] overflow-y-auto">
+                            {highlights.map(highlight => (
+                                <div 
+                                    key={highlight.id}
+                                    className="flex items-center justify-between p-2 rounded cursor-pointer hover:opacity-80 transition-all"
+                                    style={{ backgroundColor: currentTheme.bg, border: `1px solid ${currentTheme.border}` }}
+                                    onClick={() => jumpToHighlight(highlight.wordIndex)}
+                                >
+                                    <span className="text-sm">⭐ <strong>{highlight.word}</strong></span>
+                                    <button
+                                        className="px-2 py-1 rounded text-xs hover:bg-red-500 hover:text-white transition-all"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            removeHighlight(highlight.id);
+                                        }}
+                                    >
+                                        ✕
+                                    </button>
+                                </div>
+                            ))}
+                            {notes.map(note => (
+                                <div 
+                                    key={note.id}
+                                    className="p-2 rounded cursor-pointer hover:opacity-80 transition-all"
+                                    style={{ backgroundColor: currentTheme.bg, border: `1px solid ${currentTheme.border}` }}
+                                    onClick={() => jumpToNote(note.wordIndex)}
+                                >
+                                    <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                            <p className="text-sm font-semibold">📝 {note.word}</p>
+                                            <p className="text-xs mt-1" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                                {note.note}
+                                            </p>
+                                        </div>
+                                        <button
+                                            className="ml-2 px-2 py-1 rounded text-xs hover:bg-red-500 hover:text-white transition-all"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                removeNote(note.id);
+                                            }}
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {/* Loading Overlay */}
+            {isLoading && (
+                <div 
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)' }}
+                >
+                    <div className="text-center">
+                        <div className="mb-6">
+                            <div className="animate-spin w-16 h-16 mx-auto border-4 rounded-full" 
+                                style={{ 
+                                    borderColor: currentTheme.border,
+                                    borderTopColor: currentTheme.focusColor
+                                }}
+                            ></div>
+                        </div>
+                        <h3 className="text-xl font-bold mb-2" style={{ color: currentTheme.focusColor }}>
+                            {loadingMessage}
+                        </h3>
+                        <p className="text-sm" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            Please wait...
+                        </p>
+                    </div>
+                </div>
+            )}
+
+            {/* Command Palette */}
+            {showCommandPalette && (
+                <div 
+                    className="fixed inset-0 flex items-start justify-center pt-20 z-50 p-4"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+                    onClick={() => setShowCommandPalette(false)}
+                >
+                    <div 
+                        className="w-full max-w-lg rounded-xl overflow-hidden"
+                        style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, boxShadow: currentTheme.shadow, backdropFilter: "blur(10px)" }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <input
+                            type="text"
+                            className="w-full p-4 text-lg outline-none"
+                            style={{ backgroundColor: currentTheme.bg, color: currentTheme.text, border: 'none' }}
+                            placeholder="Search commands..."
+                            value={commandSearch}
+                            onChange={(e) => setCommandSearch(e.target.value)}
+                            autoFocus
+                        />
+                        <div className="max-h-96 overflow-y-auto">
+                            {filteredCommands.map(cmd => (
+                                <button
+                                    key={cmd.id}
+                                    className="w-full p-4 text-left transition-all hover:opacity-90 flex items-center gap-3"
+                                    style={{ backgroundColor: currentTheme.bg, borderTop: `1px solid ${currentTheme.border}` }}
+                                    onClick={() => executeCommand(cmd)}
+                                >
+                                    <span className="text-2xl">{cmd.icon}</span>
+                                    <span className="font-medium">{cmd.name}</span>
+                                </button>
+                            ))}
+                            {filteredCommands.length === 0 && (
+                                <div className="p-8 text-center" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                                    No commands found
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-3 text-xs text-center" style={{ backgroundColor: currentTheme.bg, color: colorTheme === 'light' ? '#999' : '#666', borderTop: `1px solid ${currentTheme.border}` }}>
+                            Press Esc to close • Cmd/Ctrl + K to open
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Onboarding Tutorial */}
+            {showOnboarding && (
+                <div 
+                    className="fixed inset-0 flex items-center justify-center z-50 p-4"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.9)' }}
+                    onClick={() => setShowOnboarding(false)}
+                >
+                    <div className="max-w-md w-full rounded-2xl p-6 relative" 
+                         style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, boxShadow: currentTheme.shadow, backdropFilter: "blur(10px)" }}
+                         onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="absolute top-4 right-4 px-3 py-1 rounded-lg text-sm font-bold"
+                            style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                            onClick={() => setShowOnboarding(false)}
+                        >
+                            ✕ Skip
+                        </button>
+                        {onboardingStep === 0 && (
+                            <>
+                                <h2 className="text-2xl font-bold mb-4" style={{ color: currentTheme.focusColor }}>
+                                    Welcome to Velocity Words! 👋
+                                </h2>
+                                <p className="mb-4">
+                                    Speed reading made easy. Words flash one at a time at your chosen speed, eliminating eye movement and boosting comprehension.
+                                </p>
+                                <p className="text-sm mb-6" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                    Keep your eyes fixed on the red center line. The red letter shows you exactly where to focus.
+                                </p>
+                                <button
+                                    className="w-full py-3 rounded-lg font-semibold transition-all touch-manipulation hover:opacity-90"
+                                    style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                    onClick={() => setOnboardingStep(1)}
+                                >
+                                    Next →
+                                </button>
+                            </>
+                        )}
+                        {onboardingStep === 1 && (
+                            <>
+                                <h2 className="text-xl font-bold mb-4">Quick Start 🚀</h2>
+                                <div className="space-y-3 mb-6 text-sm">
+                                    <div className="flex items-start gap-3">
+                                        <span className="text-2xl">1️⃣</span>
+                                        <div>
+                                            <p className="font-semibold">Load Text</p>
+                                            <p style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                                Paste text or upload a file
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <span className="text-2xl">2️⃣</span>
+                                        <div>
+                                            <p className="font-semibold">Adjust Speed</p>
+                                            <p style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                                Start slow (200-300 WPM) then increase
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <div className="flex items-start gap-3">
+                                        <span className="text-2xl">3️⃣</span>
+                                        <div>
+                                            <p className="font-semibold">Press Play</p>
+                                            <p style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                                                Keep eyes on the red center line!
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    className="w-full py-3 rounded-lg font-semibold transition-all touch-manipulation hover:opacity-90"
+                                    style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                    onClick={() => setOnboardingStep(2)}
+                                >
+                                    Next →
+                                </button>
+                            </>
+                        )}
+                        {onboardingStep === 2 && (
+                            <>
+                                <h2 className="text-xl font-bold mb-4">Pro Tips 💡</h2>
+                                <div className="space-y-3 mb-6 text-sm">
+                                    <p><strong>📱 Mobile:</strong> Swipe left/right to skip words</p>
+                                    <p><strong>📄 Files:</strong> Upload PDF, DOCX, EPUB, TXT (under 50MB)</p>
+                                    <p><strong>☁️ Cloud:</strong> Download from iCloud/Drive first, then upload</p>
+                                    <p><strong>⌨️ Keyboard:</strong> Space = play/pause, arrows = skip</p>
+                                    <p><strong>⭐ Highlight:</strong> Press H to mark important words</p>
+                                    <p><strong>📝 Notes:</strong> Press N to add notes</p>
+                                    <p><strong>💾 Save:</strong> Documents auto-save your position</p>
+                                    <p><strong>📊 Stats:</strong> Track your reading progress</p>
+                                </div>
+                                <button
+                                    className="w-full py-3 rounded-lg font-semibold transition-all touch-manipulation hover:opacity-90"
+                                    style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                    onClick={() => setShowOnboarding(false)}
+                                >
+                                    Get Started! 🎉
+                                </button>
+                            </>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Export/Import Modal */}
+            {showExportImport && (
+                <div 
+                    className="fixed inset-0 flex items-center justify-center z-50 p-4"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.8)' }}
+                    onClick={() => setShowExportImport(false)}
+                >
+                    <div 
+                        className="max-w-md w-full rounded-2xl p-6"
+                        style={{ background: currentTheme.panel, border: `1px solid ${currentTheme.border}`, boxShadow: currentTheme.shadow, backdropFilter: "blur(10px)" }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <h2 className="text-xl font-bold mb-4">Backup & Restore</h2>
+                        <p className="text-sm mb-6" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                            Export your settings, documents, and reading history to a file. Import to restore on another device.
+                        </p>
+                        
+                        <div className="space-y-3">
+                            <button
+                                className="w-full py-3 rounded-lg font-semibold transition-all touch-manipulation hover:opacity-90"
+                                style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                onClick={exportSettings}
+                            >
+                                📥 Export Settings
+                            </button>
+                            
+                            <button
+                                className="w-full py-3 rounded-lg font-semibold transition-all touch-manipulation hover:opacity-80"
+                                style={{ backgroundColor: currentTheme.bg, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}
+                                onClick={() => settingsFileInputRef.current?.click()}
+                            >
+                                📤 Import Settings
+                            </button>
+                            
+                            <button
+                                className="w-full py-2 rounded-lg font-medium transition-all touch-manipulation hover:opacity-80 text-sm"
+                                style={{ backgroundColor: currentTheme.bg, color: currentTheme.text, border: `1px solid ${currentTheme.border}` }}
+                                onClick={() => setShowExportImport(false)}
+                            >
+                                Cancel
+                            </button>
+                        </div>
+
+                        <input
+                            ref={settingsFileInputRef}
+                            type="file"
+                            accept=".json"
+                            style={{ display: 'none' }}
+                            onChange={importSettings}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Toast Notification */}
+            {toast && (
+                <div 
+                    className="fixed bottom-8 left-1/2 transform -translate-x-1/2 px-6 py-3 rounded-lg shadow-lg z-50"
+                    style={{
+                        backgroundColor: toast.type === 'error' ? '#ff4444' : toast.type === 'info' ? currentTheme.focusColor : '#4ade80',
+                        color: '#fff',
+                        maxWidth: '90%',
+                        animation: 'slideUp 0.3s ease-out'
+                    }}
+                >
+                    <p className="text-sm font-medium text-center">{toast.message}</p>
+                </div>
+            )}
+
+            {/* Focus Exercise Modal */}
+            {showFocusExercise && (
+                <div 
+                    className="fixed inset-0 flex items-center justify-center z-50"
+                    style={{ backgroundColor: 'rgba(0, 0, 0, 0.95)' }}
+                    onClick={completeFocusExercise}
+                >
+                    <div className="text-center">
+                        <div className="mb-8">
+                            <div className="w-1 h-32 mx-auto" style={{ backgroundColor: currentTheme.focusColor }}></div>
+                        </div>
+                        <h2 className="text-2xl font-bold mb-4" style={{ color: currentTheme.focusColor }}>
+                            Focus Exercise
+                        </h2>
+                        <p className="text-lg mb-2">Keep your eyes fixed on the red line</p>
+                        <p className="text-sm" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                            Don't let your eyes wander. Click anywhere to finish.
+                        </p>
+                        <div className="mt-8">
+                            <p className="text-xs" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
+                                This trains your eyes to stay centered for optimal RSVP reading
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <style>{`
+                @keyframes slideUp {
+                    from {
+                        opacity: 0;
+                        transform: translate(-50%, 20px);
+                    }
+                    to {
+                        opacity: 1;
+                        transform: translate(-50%, 0);
+                    }
+                }
+                
+                @keyframes pulse {
+                    0%, 100% {
+                        opacity: 1;
+                    }
+                    50% {
+                        opacity: 0.8;
+                    }
+                }
+                
+                @keyframes spin {
+                    from {
+                        transform: rotate(0deg);
+                    }
+                    to {
+                        transform: rotate(360deg);
+                    }
+                }
+                
+                .animate-spin {
+                    animation: spin 1s linear infinite;
+                }
+            `}</style>
+        </div>
+    );
+}
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(<VelocityWordsReader />);
+    </script>
+</body>
+</html>
