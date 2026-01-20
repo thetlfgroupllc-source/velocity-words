@@ -1306,8 +1306,14 @@ function VelocityWordsReader() {
                     color: '#ff0040',
                     textShadow: '0 0 20px rgba(255, 0, 64, 0.6)'
                 }}>SPEED READER</p>
-                <p className="text-xs sm:text-sm transition-colors opacity-75" style={{ color: colorTheme === 'light' ? '#999' : '#888' }}>
-                    📱 Swipe Left/Right to Skip • Tap ⛶ for Fullscreen
+                <p className="text-xs sm:text-sm transition-colors font-medium" style={{ 
+                    color: '#000',
+                    backgroundColor: currentTheme.focusColor,
+                    padding: '4px 12px',
+                    borderRadius: '6px',
+                    display: 'inline-block'
+                }}>
+                    📱 Swipe Left/Right to Skip Words
                 </p>
             </div>
 
@@ -1479,11 +1485,10 @@ function VelocityWordsReader() {
                         <p className="text-sm mb-4" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
                             Paste text, upload a document, or load saved content to begin
                         </p>
-                        <div className="sm:hidden bg-opacity-10 rounded-lg p-3 mb-4 text-xs text-left max-w-xs mx-auto" style={{ backgroundColor: currentTheme.focusColor, border: `1px solid ${currentTheme.focusColor}40` }}>
-                            <p className="font-bold mb-2" style={{ color: currentTheme.focusColor }}>📱 Mobile Tips:</p>
-                            <ul className="space-y-1 text-left" style={{ color: colorTheme === 'light' ? '#666' : '#888' }}>
+                        <div className="sm:hidden rounded-lg p-3 mb-4 text-xs text-left max-w-xs mx-auto" style={{ backgroundColor: currentTheme.focusColor, border: `1px solid ${currentTheme.focusColor}` }}>
+                            <p className="font-bold mb-2" style={{ color: '#000' }}>📱 Mobile Tips:</p>
+                            <ul className="space-y-1 text-left" style={{ color: '#000' }}>
                                 <li>• Load text, then tap <strong>▶ Play</strong></li>
-                                <li>• Tap <strong>⛶ Fullscreen</strong> for immersive reading</li>
                                 <li>• Swipe left/right to skip words</li>
                                 <li>• Tap <strong>⚙️ Settings</strong> to customize</li>
                             </ul>
@@ -1516,18 +1521,6 @@ function VelocityWordsReader() {
                     </div>
                 ) : (
                 <div className="relative w-full max-w-[600px] h-[150px] sm:h-[200px] flex items-center px-4" style={{ justifyContent: 'flex-start', paddingLeft: '10%' }}>
-                    <button
-                        className="absolute top-2 right-2 px-3 py-2 rounded-lg text-xs font-bold transition-all sm:hidden"
-                        style={{ 
-                            background: currentTheme.focusColor,
-                            color: '#fff',
-                            border: '2px solid rgba(255,255,255,0.2)',
-                            zIndex: 10
-                        }}
-                        onClick={toggleFullscreen}
-                    >
-                        {isFullscreen ? '⊗ Exit' : '⛶ Full'}
-                    </button>
                     {/* Guide lines */}
                     {showGuideLines && (
                         <div className="absolute w-full h-full flex flex-col justify-center pointer-events-none">
@@ -1536,18 +1529,18 @@ function VelocityWordsReader() {
                         </div>
                     )}
                     
-                    {/* Focus marker - moved to left side */}
+                    {/* Focus marker - positioned at 35% */}
                     <div className="absolute top-1/2 transform -translate-y-1/2 w-0.5 h-12 sm:h-16 pointer-events-none transition-opacity" 
-                         style={{ backgroundColor: currentTheme.focusColor, opacity: focusLineOpacity / 100, left: '20%' }}></div>
+                         style={{ backgroundColor: currentTheme.focusColor, opacity: focusLineOpacity / 100, left: '35%' }}></div>
                     
-                    {/* Word display - focus letter aligned with left-side line */}
+                    {/* Word display - focus letter aligned with line at 35% */}
                     <div 
                         className="absolute top-1/2 font-medium z-10" 
                         style={{ 
                             fontFamily: "'Courier New', monospace", 
                             letterSpacing: '0',
                             fontSize: `${getResponsiveFontSize(word)}px`,
-                            left: '20%',
+                            left: '35%',
                             transform: 'translateY(-50%)',
                             marginLeft: `${-(focusIndex + 0.5) * 0.6}em`,
                             maxWidth: '75vw',
@@ -1584,7 +1577,10 @@ function VelocityWordsReader() {
                                 color: showStats ? '#fff' : currentTheme.text,
                                 border: `1px solid ${currentTheme.border}`
                             }}
-                            onClick={() => setShowStats(!showStats)}
+                            onClick={() => {
+                                setShowStats(!showStats);
+                                if (!showStats) setShowSettings(false);
+                            }}
                         >
                             📊 {showStats ? 'Hide' : 'Stats'}
                         </button>
@@ -1595,7 +1591,10 @@ function VelocityWordsReader() {
                                 color: showSettings ? '#fff' : currentTheme.text,
                                 border: `1px solid ${currentTheme.border}`
                             }}
-                            onClick={() => setShowSettings(!showSettings)}
+                            onClick={() => {
+                                setShowSettings(!showSettings);
+                                if (!showSettings) setShowStats(false);
+                            }}
                         >
                             ⚙️ {showSettings ? 'Hide' : 'Settings'}
                         </button>
