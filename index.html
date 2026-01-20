@@ -5,18 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Velocity Words - Speed Reader</title>
     <meta name="description" content="Revolutionary speed reading app using RSVP technology">
-    
-    <!-- React and ReactDOM from multiple CDN sources for reliability -->
-    <script crossorigin src="https://unpkg.com/react@18.2.0/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone@7.23.5/babel.min.js"></script>
-    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
         #root { width: 100vw; height: 100vh; overflow: hidden; }
     </style>
-    
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body>
@@ -87,6 +83,7 @@ function VelocityWordsReader() {
     const [onboardingStep, setOnboardingStep] = useState(0);
     const [touchStartX, setTouchStartX] = useState(0);
     const [showExportImport, setShowExportImport] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
     
     // Phase 10: Quick Wins
     const [readingStreak, setReadingStreak] = useState(0);
@@ -114,6 +111,7 @@ function VelocityWordsReader() {
     const animationFrameRef = useRef(null);
     const autoSaveIntervalRef = useRef(null);
     const settingsFileInputRef = useRef(null);
+    const fullscreenContainerRef = useRef(null);
 
     // Sample text for demo
     const sampleText = "Speed reading is a technique that allows you to read faster while maintaining comprehension. By using RSVP technology, words flash sequentially at a fixed point, eliminating eye movement and significantly increasing reading speed. This method has been proven effective for many readers who want to consume more content in less time.";
@@ -1177,6 +1175,26 @@ function VelocityWordsReader() {
         setWpm(speed);
     };
 
+    const toggleFullscreen = () => {
+        if (!isFullscreen) {
+            const elem = fullscreenContainerRef.current;
+            if (elem && elem.requestFullscreen) {
+                elem.requestFullscreen().catch(err => console.log(err));
+            } else if (elem && elem.webkitRequestFullscreen) {
+                elem.webkitRequestFullscreen();
+            }
+            setIsFullscreen(true);
+        } else {
+            if (document.exitFullscreen) {
+                document.exitFullscreen().catch(err => console.log(err));
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            }
+            setIsFullscreen(false);
+        }
+    };
+
+
     const getCurrentWord = () => {
         if (words.length === 0 || currentIndex >= words.length) {
             return { word: '', focusIndex: 0, before: '', focus: '', after: '' };
@@ -1384,7 +1402,10 @@ function VelocityWordsReader() {
                 </div>
             )}
 
-            <div className="flex-1 flex items-center justify-center relative min-h-[200px] sm:min-h-[300px] reading-area-swipe">
+            <div 
+                ref={fullscreenContainerRef}
+                className="flex-1 flex items-center justify-center relative min-h-[200px] sm:min-h-[300px] reading-area-swipe"
+            >
                 {words.length === 0 ? (
                     <div className="text-center px-4 py-12">
                         <div className="text-6xl mb-4">📖</div>
@@ -1422,6 +1443,18 @@ function VelocityWordsReader() {
                     </div>
                 ) : (
                 <div className="relative w-full max-w-[600px] h-[150px] sm:h-[200px] flex items-center justify-center px-4">
+                    <button
+                        className="absolute top-2 right-2 px-3 py-2 rounded-lg text-xs font-bold transition-all sm:hidden"
+                        style={{ 
+                            background: currentTheme.focusColor,
+                            color: '#fff',
+                            border: '2px solid rgba(255,255,255,0.2)',
+                            zIndex: 10
+                        }}
+                        onClick={toggleFullscreen}
+                    >
+                        {isFullscreen ? '⊗ Exit' : '⛶ Full'}
+                    </button>
                     {/* Guide lines */}
                     {showGuideLines && (
                         <div className="absolute w-full h-full flex flex-col justify-center pointer-events-none">
@@ -1650,8 +1683,27 @@ function VelocityWordsReader() {
 
             {/* Settings Panel */}
             {showSettings && (
-                <div className="rounded-2xl p-5 sm:p-6 mb-4 transition-all" style={{ backgroundColor: currentTheme.panel, border: `1px solid ${currentTheme.border}` }}>
-                    <h3 className="text-lg font-semibold mb-4">Visual Settings</h3>
+                <div 
+                    className="fixed inset-0 z-50 bg-black bg-opacity-80 overflow-y-auto p-4 sm:p-0 sm:flex sm:items-center sm:justify-center"
+                    onClick={() => setShowSettings(false)}
+                >
+                    <div 
+                        className="bg-gray-900 rounded-2xl p-6 max-w-2xl w-full my-8"
+                        style={{ backgroundColor: currentTheme.panel, border: `1px solid ${currentTheme.border}` }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-bold">Settings</h3>
+                            <button
+                                className="px-4 py-2 rounded-lg font-bold"
+                                style={{ backgroundColor: currentTheme.focusColor, color: '#fff' }}
+                                onClick={() => setShowSettings(false)}
+                            >
+                                ✕ Close
+                            </button>
+                        </div>
+
+                    <h4 className="text-lg font-semibold mb-4">Visual Settings</h4>
                     
                     {/* Font Size */}
                     <div className="mb-5">
@@ -2002,6 +2054,7 @@ function VelocityWordsReader() {
                         <p className="text-xs mt-2 text-center" style={{ color: colorTheme === 'light' ? '#999' : '#666' }}>
                             Practice keeping your eyes on the center line
                         </p>
+                    </div>
                     </div>
                 </div>
             )}
