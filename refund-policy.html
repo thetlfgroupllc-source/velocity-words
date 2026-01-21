@@ -12,14 +12,11 @@
             background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
             color: #e0e0e0;
         }
-        
         .gradient-text {
             background: linear-gradient(90deg, #cc0000 0%, #ff0040 50%, #880000 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
-        
         .glass-panel {
             background: rgba(20, 10, 10, 0.7);
             backdrop-filter: blur(10px);
@@ -28,185 +25,150 @@
     </style>
 </head>
 <body>
-    <!-- Navigation -->
-    <nav class="fixed w-full top-0 z-50 glass-panel">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <a href="index.html" class="text-2xl font-black gradient-text">VELOCITY WORDS</a>
-                </div>
-                <div>
-                    <a href="index.html" class="text-red-500 hover:text-red-400">← Back to Home</a>
-                </div>
-            </div>
+
+<nav class="fixed w-full top-0 z-50 glass-panel">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+        <a href="index.html" class="text-2xl font-black gradient-text">VELOCITY WORDS</a>
+        <a href="index.html" class="text-red-500 hover:text-red-400">← Back to Home</a>
+    </div>
+</nav>
+
+<div class="max-w-4xl mx-auto px-4 py-24">
+    <div class="glass-panel rounded-2xl p-8 sm:p-12 space-y-8">
+
+        <div>
+            <h1 class="text-4xl font-bold gradient-text mb-2">Refund Policy</h1>
+            <p class="text-gray-400">Last Updated: January 20, 2026</p>
         </div>
-    </nav>
 
-    <!-- Content -->
-    <div class="max-w-4xl mx-auto px-4 py-24">
-        <div class="glass-panel rounded-2xl p-8 sm:p-12">
-            <h1 class="text-4xl font-bold gradient-text mb-4">Refund Policy</h1>
-            <p class="text-gray-400 mb-8">Last Updated: January 20, 2026</p>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">1. Overview</h2>
+            <p>
+                This Refund Policy explains how refunds, cancellations, and billing disputes are handled for Velocity Words subscriptions.
+                All payments are processed securely through our payment provider, Paddle.
+            </p>
+        </section>
 
-            <div class="space-y-6 text-gray-300">
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">1. Overview</h2>
-                    <p>At Velocity Words, we want you to be completely satisfied with your subscription. This Refund Policy explains our refund and cancellation procedures for all subscription plans.</p>
-                </section>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">2. Subscription Plans</h2>
+            <ul class="list-disc pl-6 space-y-1">
+                <li><strong>Monthly:</strong> $9.99/month</li>
+                <li><strong>Quarterly:</strong> $23.97 every 3 months</li>
+                <li><strong>Yearly:</strong> $71.88 per year</li>
+            </ul>
+        </section>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">2. Subscription Plans</h2>
-                    <p class="mb-3">We offer the following subscription options:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li><strong>Monthly:</strong> $9.99/month - billed monthly</li>
-                        <li><strong>Quarterly:</strong> $23.97 every 3 months ($7.99/month)</li>
-                        <li><strong>Yearly:</strong> $71.88 per year ($5.99/month)</li>
-                    </ul>
-                </section>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">3. Refund Eligibility</h2>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">3. Refund Eligibility</h2>
-                    
-                    <h3 class="text-xl font-semibold text-red-400 mb-2 mt-4">4.1 Eligible for Refund</h3>
-                    <p class="mb-3">You may be eligible for a refund in the following situations:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li><strong>Technical Issues:</strong> If the Service experiences significant technical problems that prevent you from using it, and we cannot resolve the issue within 5 business days</li>
-                        <li><strong>Billing Errors:</strong> If you were charged incorrectly or multiple times for the same subscription</li>
-                        <li><strong>Unauthorized Charges:</strong> If your account was charged without your authorization (must be reported within 30 days)</li>
-                    </ul>
+            <h3 class="text-xl font-semibold text-red-400 mt-4 mb-2">3.1 Eligible for Refund</h3>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Verified billing errors or duplicate charges</li>
+                <li>Unauthorized charges (reported within 30 days)</li>
+                <li>Severe technical issues that prevent use of the Service and cannot be resolved within 5 business days</li>
+            </ul>
 
-                    <h3 class="text-xl font-semibold text-red-400 mb-2 mt-4">3.2 NOT Eligible for Refund</h3>
-                    <p class="mb-3">Refunds are generally NOT provided for:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>Change of mind after subscribing</li>
-                        <li>Failure to use the Service during your subscription period</li>
-                        <li>Forgetting to cancel before renewal</li>
-                        <li>Dissatisfaction with reading speed results (individual results vary)</li>
-                        <li>Partial month refunds (you retain access until the end of your billing period)</li>
-                        <li>Previous billing periods if you've used the Service</li>
-                    </ul>
-                </section>
+            <h3 class="text-xl font-semibold text-red-400 mt-4 mb-2">3.2 Not Eligible for Refund</h3>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Change of mind after purchase</li>
+                <li>Failure to cancel before renewal</li>
+                <li>Lack of usage during the subscription period</li>
+                <li>Partial billing periods</li>
+                <li>Performance expectations or reading speed results</li>
+            </ul>
+        </section>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">4. How to Cancel Your Subscription</h2>
-                    <p class="mb-3">We make canceling simple - just email us and we'll take care of it:</p>
-                    <p class="mb-3">Email <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a> with "Cancel Subscription" in the subject line.</p>
-                    <p class="mt-3"><strong>What happens when you cancel:</strong></p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>Your cancellation is processed immediately</li>
-                        <li>You'll receive confirmation via email</li>
-                        <li>No further charges will be made</li>
-                        <li>Access ends when your cancellation is processed</li>
-                    </ul>
-                </section>
+        <!-- UPDATED SECTION 4 -->
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">4. How to Cancel Your Subscription</h2>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">5. How to Request a Refund</h2>
-                    <p class="mb-3">If you believe you qualify for a refund based on Section 4.1:</p>
-                    <ol class="list-decimal pl-6 space-y-2">
-                        <li>Email us at <a href="/cdn-cgi/l/email-protection#deadabaeaeb1acaa9ea8bbb2b1a9b1acbaadf0bdb1b3" class="text-red-500 hover:text-red-400"><span class="__cf_email__" data-cfemail="0c7f797c7c637e784c7a6960637b637e687f226f6361">[email&#160;protected]</span></a></li>
-                        <li>Include "Refund Request" in the subject line</li>
-                        <li>Provide your account email and reason for the refund</li>
-                        <li>Include any relevant details (billing dates, error messages, etc.)</li>
-                    </ol>
-                    <p class="mt-3">We will review your request within 5 business days and respond with our decision.</p>
-                </section>
+            <p class="mb-3">
+                All subscriptions are managed and billed through Paddle.
+            </p>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">6. Refund Processing</h2>
-                    <p class="mb-3">If your refund is approved:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>Refunds are processed through Stripe to your original payment method</li>
-                        <li>Processing typically takes 5-10 business days</li>
-                        <li>The exact timing depends on your bank or card issuer</li>
-                        <li>You will receive email confirmation when the refund is processed</li>
-                        <li>Your account access will be immediately terminated upon refund approval</li>
-                    </ul>
-                </section>
+            <p class="mb-3">
+                <strong>To cancel your subscription:</strong>
+            </p>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">7. Automatic Renewals</h2>
-                    <p class="mb-3">Your subscription automatically renews at the end of each billing period:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li><strong>Monthly:</strong> Renews every 30 days</li>
-                        <li><strong>Quarterly:</strong> Renews every 90 days</li>
-                        <li><strong>Yearly:</strong> Renews every 365 days</li>
-                    </ul>
-                    <p class="mt-3">You'll be charged automatically on renewal. To cancel anytime, just email <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a> and we'll process it immediately - no waiting period required.</p>
-                </section>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Use the Paddle customer portal link included in your purchase receipt</li>
+                <li>Or use the subscription management link provided by Paddle in your confirmation email</li>
+            </ul>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">8. Failed Payments</h2>
-                    <p class="mb-3">If your payment fails:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>We will attempt to charge your payment method up to 3 times</li>
-                        <li>You will receive email notifications about failed payments</li>
-                        <li>If all attempts fail, your subscription will be suspended</li>
-                        <li>Your account data will be retained for 30 days</li>
-                        <li>After 30 days, your account may be permanently deleted</li>
-                    </ul>
-                    <p class="mt-3">No refunds are provided for periods when your account was suspended due to failed payments.</p>
-                </section>
+            <p class="mt-3">
+                Cancellations take effect immediately and prevent future renewals.
+            </p>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">9. Promotional Pricing</h2>
-                    <p>If you subscribed during a promotional period (e.g., our 7-day sale), refund eligibility is the same as outlined above. Promotional pricing cannot be reinstated if you cancel and later re-subscribe.</p>
-                </section>
+            <p class="mt-3"><strong>After cancellation:</strong></p>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>No further charges will be made</li>
+                <li>You will retain access until the end of your current billing period</li>
+                <li>You will receive confirmation directly from Paddle</li>
+            </ul>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">10. Service Termination by Velocity Words</h2>
-                    <p class="mb-3">If we terminate the Service entirely:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>We will provide at least 30 days notice</li>
-                        <li>You will receive a prorated refund for any unused portion of your subscription</li>
-                        <li>No refunds are provided if termination is due to violation of our Terms of Service</li>
-                    </ul>
-                </section>
+            <p class="mt-3 text-sm text-gray-400">
+                If you cannot locate your Paddle cancellation link, contact
+                <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a>
+                and we’ll assist you.
+            </p>
+        </section>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">11. Chargebacks</h2>
-                    <p class="mb-3">If you initiate a chargeback with your bank or credit card company:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>Your account will be immediately suspended</li>
-                        <li>We will contest unauthorized chargebacks</li>
-                        <li>You may be permanently banned from creating future accounts</li>
-                        <li>Please contact us first to resolve any billing disputes</li>
-                    </ul>
-                </section>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">5. How to Request a Refund</h2>
+            <p>
+                Refund requests must be submitted via email to
+                <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a>
+                and are reviewed on a case-by-case basis.
+            </p>
+        </section>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">12. Changes to This Policy</h2>
-                    <p>We reserve the right to modify this Refund Policy at any time. Changes will be posted on this page with an updated "Last Updated" date. Your continued use of the Service after changes constitutes acceptance of the modified policy.</p>
-                </section>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">6. Refund Processing</h2>
+            <ul class="list-disc pl-6 space-y-1">
+                <li>Approved refunds are processed through Paddle</li>
+                <li>Funds are returned to the original payment method</li>
+                <li>Processing may take 5–10 business days</li>
+                <li>Account access is revoked upon refund approval</li>
+            </ul>
+        </section>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">13. Florida Consumer Rights</h2>
-                    <p class="mb-3">As a Florida-based business, we comply with Florida consumer protection laws. Under Florida law, you have the right to:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>Clear disclosure of automatic renewal terms before purchase</li>
-                        <li>Easy cancellation of automatic renewals</li>
-                        <li>Protection from deceptive trade practices</li>
-                        <li>File complaints with the Florida Attorney General's Office if you believe your consumer rights have been violated</li>
-                    </ul>
-                    <p class="mt-3">Nothing in this Refund Policy limits your rights under the Florida Deceptive and Unfair Trade Practices Act.</p>
-                </section>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">7. Automatic Renewals</h2>
+            <p>
+                Subscriptions automatically renew at the end of each billing period unless canceled through Paddle prior to renewal.
+            </p>
+        </section>
 
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">14. Contact Us</h2>
-                    <p class="mb-3">For questions about this Refund Policy or to request a refund:</p>
-                    <p class="font-semibold">Velocity Words<br>
-                    Orlando, Florida<br>
-                    Email: <a href="mailto:support@velowords.com" class="text-red-500 hover:text-red-400">support@velowords.com</a></p>
-                    <p class="mt-3 text-sm text-gray-400">We typically respond to all requests within 24 hours.</p>
-                </section>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">8. Chargebacks</h2>
+            <p>
+                Initiating a chargeback may result in immediate account suspension.
+                Please contact support before filing a dispute to resolve billing issues.
+            </p>
+        </section>
 
-                <section class="mt-8 pt-6 border-t border-gray-700 bg-red-900 bg-opacity-10 p-4 rounded-lg">
-                    <h3 class="text-lg font-bold text-red-500 mb-2">Quick Summary</h3>
-                    <ul class="list-disc pl-6 space-y-1 text-sm">
-                        <li>✓ Refunds available for technical issues or billing errors</li>
-                        <li>✗ No refunds for change of mind after subscribing</li>
-                        <li>✓ Cancel anytime - processed immediately</li>
-                        <li>✓ Questions? Email <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a></li>
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">9. Changes to This Policy</h2>
+            <p>
+                We reserve the right to update this policy at any time. Changes will be reflected on this page.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">10. Contact</h2>
+            <p>
+                Velocity Words<br>
+                Orlando, Florida<br>
+                <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a>
+            </p>
+        </section>
+
+    </div>
+</div>
+
+</body>
+</html>
+
                     </ul>
                 </section>
             </div>
