@@ -1,3 +1,17 @@
+<script>
+// Temporary password protection
+const testPassword = "velocitytest123";
+const userPassword = localStorage.getItem('velocity_access');
+
+if (userPassword !== testPassword) {
+  const entered = prompt("Enter access code:");
+  if (entered === testPassword) {
+    localStorage.setItem('velocity_access', testPassword);
+  } else {
+    window.location.href = 'index.html';
+  }
+}
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
