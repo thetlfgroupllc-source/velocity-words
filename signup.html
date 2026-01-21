@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up - Velocity Words</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem 0;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #cc0000 0%, #ff0040 50%, #880000 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-panel {
+            background: rgba(20, 10, 10, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 50, 50, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(255, 0, 64, 0.3);
+        }
+        
+        .btn-primary {
+            background: #ff0040;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 24px rgba(255, 0, 64, 0.6);
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 32px rgba(255, 0, 64, 0.8);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        input {
+            background: rgba(30, 20, 20, 0.7);
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            color: #e0e0e0;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #ff0040;
+            box-shadow: 0 0 0 3px rgba(255, 0, 64, 0.2);
+        }
+        
+        .error-message {
+            background: rgba(255, 0, 64, 0.2);
+            border: 1px solid #ff0040;
+            color: #ff0040;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(0, 255, 64, 0.2);
+            border: 1px solid #00ff40;
+            color: #00ff40;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        
+        .password-strength {
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            margin-top: 0.5rem;
+            overflow: hidden;
+        }
+        
+        .password-strength-bar {
+            height: 100%;
+            width: 0%;
+            transition: all 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-md w-full mx-4">
+        <div class="glass-panel rounded-2xl p-8">
+            <!-- Logo/Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black gradient-text mb-2">VELOCITY WORDS</h1>
+                <p class="text-gray-400">Create your account</p>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div id="errorMessage" class="error-message mb-4"></div>
+            <div id="successMessage" class="success-message mb-4"></div>
+
+            <!-- Signup Form -->
+            <form id="signupForm">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-semibold mb-2 text-gray-300">Email</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="your@email.com"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-semibold mb-2 text-gray-300">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="••••••••"
+                            minlength="6"
+                            required
+                        >
+                        <div class="password-strength">
+                            <div id="passwordStrengthBar" class="password-strength-bar"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
+                    </div>
+
+                    <div>
+                        <label for="confirmPassword" class="block text-sm font-semibold mb-2 text-gray-300">Confirm Password</label>
+                        <input 
+                            type="password" 
+                            id="confirmPassword" 
+                            name="confirmPassword" 
+                            placeholder="••••••••"
+                            minlength="6"
+                            required
+                        >
+                    </div>
+
+                    <div class="flex items-start">
+                        <input type="checkbox" id="termsAccept" class="w-4 h-4 mr-2 mt-1" required>
+                        <label for="termsAccept" class="text-sm text-gray-400">
+                            I agree to the <a href="terms-of-service.html" class="text-red-500 hover:text-red-400" target="_blank">Terms of Service</a> and <a href="privacy-policy.html" class="text-red-500 hover:text-red-400" target="_blank">Privacy Policy</a>
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn-primary mt-6" id="signupBtn">
+                        Create Account
+                    </button>
+                </div>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-transparent text-gray-500">Already have an account?</span>
+                </div>
+            </div>
+
+            <!-- Login Link -->
+            <a href="login.html" class="block text-center">
+                <button type="button" class="w-full px-4 py-3 border border-red-500 text-red-500 rounded-lg font-semibold hover:bg-red-500 hover:bg-opacity-10 transition">
+                    Login
+                </button>
+            </a>
+
+            <!-- Back to Home -->
+            <div class="text-center mt-6">
+                <a href="index.html" class="text-sm text-gray-500 hover:text-gray-400">← Back to home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // TODO: Replace with YOUR Firebase config from Firebase Console
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+        import { getFirestore, doc, setDoc } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js';
+
+        // ⚠️ REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG ⚠️
+        const firebaseConfig = {
+            apiKey: "AIzaSyADOpIXsX18BNAB22UMcZ-77hnQmhLFKrY",
+            authDomain: "velocity-words-speed-rea-d8c72.firebaseapp.com",
+            projectId: "velocity-words-speed-rea-d8c72",
+            storageBucket: "velocity-words-speed-rea-d8c72.firebasestorage.app",
+            messagingSenderId: "853548916724",
+            appId: "1:853548916724:web:a250be38eef21d936123a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Get form elements
+        const signupForm = document.getElementById('signupForm');
+        const signupBtn = document.getElementById('signupBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const passwordInput = document.getElementById('password');
+        const passwordStrengthBar = document.getElementById('passwordStrengthBar');
+
+        // Password strength checker
+        passwordInput.addEventListener('input', (e) => {
+            const password = e.target.value;
+            let strength = 0;
+            
+            if (password.length >= 6) strength += 25;
+            if (password.length >= 8) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password) || /[^A-Za-z0-9]/.test(password)) strength += 25;
+            
+            passwordStrengthBar.style.width = strength + '%';
+            
+            if (strength <= 25) {
+                passwordStrengthBar.style.background = '#ff0040';
+            } else if (strength <= 50) {
+                passwordStrengthBar.style.background = '#ff8800';
+            } else if (strength <= 75) {
+                passwordStrengthBar.style.background = '#ffcc00';
+            } else {
+                passwordStrengthBar.style.background = '#00ff40';
+            }
+        });
+
+        // Handle form submission
+        signupForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Clear previous messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Get form values
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const termsAccept = document.getElementById('termsAccept').checked;
+            
+            // Validation
+            if (password !== confirmPassword) {
+                errorMessage.textContent = 'Passwords do not match.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            if (!termsAccept) {
+                errorMessage.textContent = 'You must accept the Terms of Service and Privacy Policy.';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            // Disable button
+            signupBtn.disabled = true;
+            signupBtn.textContent = 'Creating account...';
+            
+            try {
+                // Create user account
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                const user = userCredential.user;
+                
+                // Create user document in Firestore
+                await setDoc(doc(db, 'users', user.uid), {
+                    email: user.email,
+                    createdAt: new Date().toISOString(),
+                    subscriptionStatus: 'inactive', // Will be updated by Stripe webhook
+                    trialUsed: false
+                });
+                
+                // Success!
+                successMessage.textContent = 'Account created! Redirecting to subscription...';
+                successMessage.style.display = 'block';
+                
+                // Redirect to pricing/subscription page
+                setTimeout(() => {
+                    window.location.href = 'index.html#pricing';
+                }, 1500);
+                
+            } catch (error) {
+                // Handle errors
+                let errorText = 'Signup failed. Please try again.';
+                
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorText = 'An account with this email already exists.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorText = 'Invalid email address.';
+                        break;
+                    case 'auth/weak-password':
+                        errorText = 'Password is too weak. Please use at least 6 characters.';
+                        break;
+                    case 'auth/operation-not-allowed':
+                        errorText = 'Email/password accounts are not enabled. Please contact support.';
+                        break;
+                    default:
+                        errorText = error.message;
+                }
+                
+                errorMessage.textContent = errorText;
+                errorMessage.style.display = 'block';
+                
+                // Re-enable button
+                signupBtn.disabled = false;
+                signupBtn.textContent = 'Create Account';
+            }
+        });
+    </script>
+</body>
+</html>

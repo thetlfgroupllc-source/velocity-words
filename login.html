@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Velocity Words</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, #cc0000 0%, #ff0040 50%, #880000 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass-panel {
+            background: rgba(20, 10, 10, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 50, 50, 0.2);
+            box-shadow: 0 8px 32px 0 rgba(255, 0, 64, 0.3);
+        }
+        
+        .btn-primary {
+            background: #ff0040;
+            color: white;
+            padding: 0.75rem 2rem;
+            border-radius: 0.5rem;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 4px 24px rgba(255, 0, 64, 0.6);
+            border: none;
+            cursor: pointer;
+            width: 100%;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 32px rgba(255, 0, 64, 0.8);
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        input {
+            background: rgba(30, 20, 20, 0.7);
+            border: 1px solid rgba(255, 50, 50, 0.3);
+            color: #e0e0e0;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            width: 100%;
+            transition: all 0.3s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: #ff0040;
+            box-shadow: 0 0 0 3px rgba(255, 0, 64, 0.2);
+        }
+        
+        .error-message {
+            background: rgba(255, 0, 64, 0.2);
+            border: 1px solid #ff0040;
+            color: #ff0040;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(0, 255, 64, 0.2);
+            border: 1px solid #00ff40;
+            color: #00ff40;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="max-w-md w-full mx-4">
+        <div class="glass-panel rounded-2xl p-8">
+            <!-- Logo/Header -->
+            <div class="text-center mb-8">
+                <h1 class="text-4xl font-black gradient-text mb-2">VELOCITY WORDS</h1>
+                <p class="text-gray-400">Welcome back!</p>
+            </div>
+
+            <!-- Error/Success Messages -->
+            <div id="errorMessage" class="error-message mb-4"></div>
+            <div id="successMessage" class="success-message mb-4"></div>
+
+            <!-- Login Form -->
+            <form id="loginForm">
+                <div class="space-y-4">
+                    <div>
+                        <label for="email" class="block text-sm font-semibold mb-2 text-gray-300">Email</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            name="email" 
+                            placeholder="your@email.com"
+                            required
+                        >
+                    </div>
+
+                    <div>
+                        <label for="password" class="block text-sm font-semibold mb-2 text-gray-300">Password</label>
+                        <input 
+                            type="password" 
+                            id="password" 
+                            name="password" 
+                            placeholder="••••••••"
+                            required
+                        >
+                    </div>
+
+                    <div class="flex items-center justify-between text-sm">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="rememberMe" class="w-4 h-4 mr-2">
+                            <span class="text-gray-400">Remember me</span>
+                        </label>
+                        <a href="forgot-password.html" class="text-red-500 hover:text-red-400">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-primary mt-6" id="loginBtn">
+                        Login
+                    </button>
+                </div>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative my-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-700"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-transparent text-gray-500">Don't have an account?</span>
+                </div>
+            </div>
+
+            <!-- Sign Up Link -->
+            <a href="signup.html" class="block text-center">
+                <button type="button" class="w-full px-4 py-3 border border-red-500 text-red-500 rounded-lg font-semibold hover:bg-red-500 hover:bg-opacity-10 transition">
+                    Create Account
+                </button>
+            </a>
+
+            <!-- Back to Home -->
+            <div class="text-center mt-6">
+                <a href="index.html" class="text-sm text-gray-500 hover:text-gray-400">← Back to home</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // TODO: Replace with YOUR Firebase config from Firebase Console
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence, browserSessionPersistence } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js';
+
+        // ⚠️ REPLACE THIS WITH YOUR ACTUAL FIREBASE CONFIG ⚠️
+        const firebaseConfig = {
+            apiKey: "AIzaSyADOpIXsX18BNAB22UMcZ-77hnQmhLFKrY",
+            authDomain: "velocity-words-speed-rea-d8c72.firebaseapp.com",
+            projectId: "velocity-words-speed-rea-d8c72",
+            storageBucket: "velocity-words-speed-rea-d8c72.firebasestorage.app",
+            messagingSenderId: "853548916724",
+            appId: "1:853548916724:web:a250be38eef21d936123a1"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Get form elements
+        const loginForm = document.getElementById('loginForm');
+        const loginBtn = document.getElementById('loginBtn');
+        const errorMessage = document.getElementById('errorMessage');
+        const successMessage = document.getElementById('successMessage');
+        const rememberMeCheckbox = document.getElementById('rememberMe');
+
+        // Handle form submission
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Clear previous messages
+            errorMessage.style.display = 'none';
+            successMessage.style.display = 'none';
+            
+            // Get form values
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const rememberMe = rememberMeCheckbox.checked;
+            
+            // Disable button
+            loginBtn.disabled = true;
+            loginBtn.textContent = 'Logging in...';
+            
+            try {
+                // Set persistence based on "Remember me"
+                const persistence = rememberMe ? browserLocalPersistence : browserSessionPersistence;
+                await setPersistence(auth, persistence);
+                
+                // Sign in user
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                
+                // Success!
+                successMessage.textContent = 'Login successful! Redirecting...';
+                successMessage.style.display = 'block';
+                
+                // Redirect to app (after checking subscription status)
+                setTimeout(() => {
+                    window.location.href = 'app.html';
+                }, 1000);
+                
+            } catch (error) {
+                // Handle errors
+                let errorText = 'Login failed. Please try again.';
+                
+                switch (error.code) {
+                    case 'auth/invalid-email':
+                        errorText = 'Invalid email address.';
+                        break;
+                    case 'auth/user-disabled':
+                        errorText = 'This account has been disabled.';
+                        break;
+                    case 'auth/user-not-found':
+                        errorText = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorText = 'Incorrect password.';
+                        break;
+                    case 'auth/invalid-credential':
+                        errorText = 'Invalid email or password.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorText = 'Too many failed attempts. Please try again later.';
+                        break;
+                    default:
+                        errorText = error.message;
+                }
+                
+                errorMessage.textContent = errorText;
+                errorMessage.style.display = 'block';
+                
+                // Re-enable button
+                loginBtn.disabled = false;
+                loginBtn.textContent = 'Login';
+            }
+        });
+    </script>
+</body>
+</html>
