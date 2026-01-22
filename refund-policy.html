@@ -12,14 +12,11 @@
             background: linear-gradient(135deg, #0a0a0a 0%, #1a0a0a 100%);
             color: #e0e0e0;
         }
-        
         .gradient-text {
             background: linear-gradient(90deg, #cc0000 0%, #ff0040 50%, #880000 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            background-clip: text;
         }
-        
         .glass-panel {
             background: rgba(20, 10, 10, 0.7);
             backdrop-filter: blur(10px);
@@ -28,67 +25,128 @@
     </style>
 </head>
 <body>
-    <nav class="fixed w-full top-0 z-50 glass-panel">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between items-center h-16">
-                <div class="flex items-center gap-3">
-                    <a href="index.html" class="text-2xl font-black gradient-text">VELOCITY WORDS</a>
-                </div>
-                <div>
-                    <a href="index.html" class="text-red-500 hover:text-red-400">← Back to Home</a>
-                </div>
-            </div>
-        </div>
-    </nav>
 
-    <div class="max-w-4xl mx-auto px-4 py-24">
-        <div class="glass-panel rounded-2xl p-8 sm:p-12">
-            <h1 class="text-4xl font-bold gradient-text mb-4">Refund Policy</h1>
-            <p class="text-gray-400 mb-8">Last Updated: January 20, 2026</p>
-
-            <div class="space-y-6 text-gray-300">
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">1. Overview</h2>
-                    <p>This Refund Policy explains our procedures for all subscription plans.</p>
-                </section>
-
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">3. Refund Eligibility</h2>
-                    <h3 class="text-xl font-semibold text-red-400 mb-2 mt-4">3.2 NOT Eligible for Refund</h3>
-                    <p class="mb-3">Refunds are generally NOT provided for:</p>
-                    <ul class="list-disc pl-6 space-y-1">
-                        <li>Change of mind after subscribing</li>
-                        <li>Failure to use the Service during your subscription period</li>
-                        <li>Partial month refunds (access concludes immediately upon cancellation)</li>
-                    </ul>
-                </section>
-
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">4. How to Cancel Your Subscription</h2>
-                    <p class="mb-3">You can cancel your subscription at any time through your account settings.</p>
-                    <p class="mt-3"><strong>Important:</strong> Cancellations take effect immediately. Once you confirm your cancellation, your access to the Service will conclude. No refunds are provided for the remaining days of your current subscription period.</p>
-                </section>
-
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">6. Refund Processing</h2>
-                    <p>Approved refunds are processed through Stripe. Your account access will be immediately terminated upon refund approval.</p>
-                </section>
-
-                <section>
-                    <h2 class="text-2xl font-bold text-red-500 mb-3">13. Florida Consumer Rights</h2>
-                    <p>We comply with Florida consumer protection laws, including the Florida Deceptive and Unfair Trade Practices Act.</p>
-                </section>
-
-                <section class="mt-8 pt-6 border-t border-gray-700 bg-red-900 bg-opacity-10 p-4 rounded-lg">
-                    <h3 class="text-lg font-bold text-red-500 mb-2">Quick Summary</h3>
-                    <ul class="list-disc pl-6 space-y-1 text-sm">
-                        <li>✓ Refunds for technical issues or billing errors</li>
-                        <li>✗ No partial refunds - access concludes upon cancellation</li>
-                        <li>✓ Cancel anytime - takes effect immediately</li>
-                    </ul>
-                </section>
-            </div>
-        </div>
+<nav class="fixed w-full top-0 z-50 glass-panel">
+    <div class="max-w-7xl mx-auto px-4 h-16 flex justify-between items-center">
+        <a href="index.html" class="text-2xl font-black gradient-text">VELOCITY WORDS</a>
+        <a href="index.html" class="text-red-500 hover:text-red-400">← Back to Home</a>
     </div>
+</nav>
+
+<div class="max-w-4xl mx-auto px-4 py-24">
+    <div class="glass-panel rounded-2xl p-8 sm:p-12 space-y-8">
+
+        <div>
+            <h1 class="text-4xl font-bold gradient-text mb-2">Refund Policy</h1>
+            <p class="text-gray-400">Last Updated: January 20, 2026</p>
+        </div>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">1. Overview</h2>
+            <p>
+                This Refund Policy explains how refunds are handled for Velocity Words subscriptions.
+                All payments are processed securely through our payment provider, Paddle.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">2. Refund Policy</h2>
+            <p class="mb-4">
+                Refunds are provided at the sole discretion of Paddle and on a case-by-case basis and may be refused.
+                Paddle will refuse a refund request if we find evidence of fraud, refund abuse, or other manipulative behavior that entitles Paddle to counterclaim the refund.
+            </p>
+            <p>
+                This does not affect your rights as a Consumer in relation to Products which are not as described, faulty or not fit for purpose.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">3. Consumer Right to Cancel (EU/UK Customers)</h2>
+            <p class="mb-4">
+                If you are a Consumer resident in the European Union or United Kingdom purchasing for personal use, you have the right to cancel your purchase within 14 days without giving any reason.
+            </p>
+            <p class="mb-4">
+                The cancellation period will expire after 14 days from the day after completion of your purchase.
+            </p>
+            <p class="mb-4 font-semibold text-red-400">
+                Exception for Digital Content: Your right to cancel does NOT apply once you have started downloading, streaming, or otherwise accessing our digital service. By using our service, you consent to immediate performance and acknowledge you lose cancellation rights once access begins.
+            </p>
+            <p>
+                To exercise your right to cancel, you must inform Paddle of your decision. Please contact Paddle directly through their customer support channels.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">4. How to Request a Refund</h2>
+            <p class="mb-4">
+                All refund requests are processed by Paddle. Please contact Paddle directly for any refund inquiries.
+            </p>
+            <p>
+                You may also contact us at <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a> for assistance, but final refund decisions are made by Paddle.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">5. Subscription Plans & Cancellations</h2>
+            <ul class="list-disc pl-6 space-y-2 mb-4">
+                <li><strong>Monthly:</strong> $7.99/month</li>
+                <li><strong>Quarterly:</strong> $23.97 every 3 months</li>
+                <li><strong>Yearly:</strong> $95.88 per year</li>
+            </ul>
+            <p class="mb-4">
+                All subscriptions are managed and billed through Paddle. To cancel your subscription, use the Paddle customer portal link included in your purchase receipt or confirmation email.
+            </p>
+            <p>
+                Cancellations must be made at least 48 hours before your next billing date to prevent renewal.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">6. Automatic Renewals</h2>
+            <p>
+                Subscriptions automatically renew at the end of each billing period unless canceled through Paddle prior to renewal.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">7. Chargebacks</h2>
+            <p>
+                Initiating a chargeback may result in immediate account suspension.
+                Please contact Paddle support before filing a dispute to resolve billing issues.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">8. Payment Processing</h2>
+            <p class="mb-4">
+                Paddle is the Merchant of Record for all transactions. Paddle handles all payment processing, tax collection, and refund administration.
+            </p>
+            <p>
+                For full terms and conditions regarding payments, refunds, and disputes, please refer to Paddle's Terms and Conditions.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">9. Changes to This Policy</h2>
+            <p>
+                We reserve the right to update this policy at any time. Changes will be reflected on this page.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-2xl font-bold text-red-500 mb-3">10. Contact</h2>
+            <p>
+                Velocity Words<br>
+                Orlando, Florida<br>
+                <a href="mailto:support@velowords.com" class="text-red-500 hover:underline">support@velowords.com</a>
+            </p>
+            <p class="mt-2 text-sm text-gray-400">
+                For payment, billing, and refund inquiries, please contact Paddle directly.
+            </p>
+        </section>
+
+    </div>
+</div>
+
 </body>
 </html>
